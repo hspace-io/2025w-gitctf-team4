@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>Knights Frontier – 마이페이지</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #040818;
+      color: #f5f5f5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: flex;
+      justify-content: center;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 1280px;
+      padding: 32px 24px 40px;
+    }
+
+    header {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    header img {
+      height: 110px;
+      object-fit: contain;
+    }
+
+    .header-actions {
+      position: absolute;
+      right: 0;
+      top: 8px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .header-btn {
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid #8fa3ff;
+      background: transparent;
+      color: #e2e7ff;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s ease-out, color 0.15s ease-out,
+        border-color 0.15s ease-out;
+    }
+
+    .header-btn.primary {
+      border-color: #27ae60;
+      color: #d8ffe7;
+    }
+
+    .header-btn:hover {
+      background: rgba(143, 163, 255, 0.22);
+    }
+
+    .header-btn.primary:hover {
+      background: rgba(39, 174, 96, 0.25);
+    }
+
+    .content {
+      display: flex;
+      gap: 32px;
+    }
+
+    .card {
+      background: #dde5f5;
+      color: #1a2438;
+      border-radius: 18px;
+      padding: 24px 28px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    }
+
+    .profile-card {
+      width: 360px;
+    }
+
+    .profile-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .profile-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 15px;
+    }
+
+    .profile-label {
+      width: 80px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .profile-value {
+      flex: 1;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #4a6bff;
+      color: #f5f7ff;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+
+    .logout-row {
+      margin-top: 18px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .logout-btn {
+      padding: 8px 16px;
+      background: #c0392b;
+      color: #ffffff;
+      border: none;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease-out, transform 0.08s ease-out;
+    }
+
+    .logout-btn:hover {
+      background: #e74c3c;
+      transform: translateY(-1px);
+    }
+
+    .logout-btn:active {
+      transform: translateY(0);
+    }
+
+    .stats-card {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .stats-section-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .stat-label {
+      color: #2c3e50;
+    }
+
+    .stat-value {
+      font-weight: 700;
+    }
+
+    .coin-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #fff9c4, #f1c40f);
+      border: 2px solid #d4ac0d;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #8e6b02;
+      margin-right: 6px;
+    }
+
+    .recent-list {
+      margin-top: 6px;
+      padding-left: 16px;
+      font-size: 14px;
+      color: #34495e;
+    }
+
+    .recent-list li {
+      margin-bottom: 4px;
+    }
+
+    @media (max-width: 768px) {
+      .content {
+        flex-direction: column;
+      }
+
+      .profile-card {
+        width: 100%;
+        max-width: 360px;
+      }
+
+      header {
+        margin-bottom: 24px;
+      }
+
+      .header-actions {
+        position: static;
+        margin-left: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="header-actions">
+        <!-- 대시보드로 -->
+        <a href="/main" class="header-btn">대시보드</a>
+        <!-- 현재 페이지 강조 -->
+        <a href="/mypage" class="header-btn primary">마이페이지</a>
+      </div>
+
+      <img src="logo_1.png" alt="Knights Frontier 로고" />
+    </header>
+
+    <main class="content">
+      <!-- 왼쪽: 프로필 -->
+      <section class="card profile-card">
+        <div class="profile-title">내 기사 프로필</div>
+
+        <div class="profile-row">
+          <div class="profile-label">닉네임</div>
+          <div class="profile-value">guest_knight</div>
+        </div>
+
+        <div class="profile-row">
+          <div class="profile-label">등급</div>
+          <div class="profile-value">브론즈 기사</div>
+        </div>
+
+        <div class="profile-row">
+          <div class="profile-label">이메일</div>
+          <div class="profile-value">you@example.com</div>
+        </div>
+
+        <span class="badge">CTF 미션 수련 중</span>
+
+        <div class="logout-row">
+          <!-- 나중에 JS로 POST /api/logout 호출해도 되고, 일단 버튼만 디자인 -->
+          <form id="logout-form" method="POST" action="/api/logout">
+            <button type="submit" class="logout-btn">로그아웃</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- 오른쪽: 통계/최근 미션 -->
+      <section class="card stats-card">
+        <div>
+          <div class="stats-section-title">나의 보상 & 미션 현황</div>
+
+          <div class="stat-row">
+            <span class="stat-label">
+              <span class="coin-icon">C</span>
+              보유 코인
+            </span>
+            <span class="stat-value">0 개</span>
+          </div>
+
+          <div class="stat-row">
+            <span class="stat-label">완료한 미션</span>
+            <span class="stat-value">0 개</span>
+          </div>
+
+          <div class="stat-row">
+            <span class="stat-label">진행 중인 미션</span>
+            <span class="stat-value">0 개</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="stats-section-title">최근 미션 활동</div>
+          <ul class="recent-list">
+            <li>아직 완료된 미션이 없습니다.</li>
+            <!-- 나중에 서버에서 최근 미션 불러와서 채우면 됨 -->
+          </ul>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
