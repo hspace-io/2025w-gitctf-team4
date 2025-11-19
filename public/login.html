@@ -229,12 +229,10 @@
   <div class="page">
     <header>
       <div class="header-actions">
-        <!-- 필요하면 로그인/회원가입 토글 -->
-        <a href="index.html" class="header-btn">미션 대시보드</a>
-        <a href="#" class="header-btn primary">로그인</a>
+        <a href="/main" class="header-btn">미션 대시보드</a>
+        <a href="/login" class="header-btn primary">로그인</a>
       </div>
 
-      <!-- 기존 로고 그대로 사용 -->
       <img src="logo_1.png" alt="Knights Frontier 로고" />
     </header>
 
@@ -245,49 +243,80 @@
           계정을 연결하면 보안 미션과 보상 기록을 한 번에 관리할 수 있어요.
         </p>
 
-    <form
-    id="login-form"
-    class="auth-form"
-    method="POST"
-    action="/login"
-    autocomplete="on"
-    >
-    <div class="input-group">
-        <label for="login-email" class="input-label">이메일</label>
-        <input
-        id="login-email"
-        name="email"
-        type="email"
-        class="input-field"
-        placeholder="you@example.com"
-        required
-        />
-    </div>
+        <form
+          id="login-form"
+          class="auth-form"
+          method="POST"
+          action="/login"
+          autocomplete="on"
+        >
+          <div class="input-group">
+            <label for="login-email" class="input-label">이메일</label>
+            <input
+              id="login-email"
+              name="email"
+              type="email"
+              class="input-field"
+              placeholder="you@example.com"
+              required
+            />
+          </div>
 
-    <div class="input-group">
-        <label for="login-password" class="input-label">비밀번호</label>
-        <input
-        id="login-password"
-        name="password"
-        type="password"
-        class="input-field"
-        placeholder="비밀번호"
-        required
-        />
-    </div>
+          <div class="input-group">
+            <label for="login-password" class="input-label">비밀번호</label>
+            <input
+              id="login-password"
+              name="password"
+              type="password"
+              class="input-field"
+              placeholder="비밀번호"
+              required
+            />
+          </div>
 
-    <button type="submit" class="submit-btn">로그인</button>
-    </form>
+          <button type="submit" class="submit-btn">로그인</button>
+        </form>
 
         <div class="auth-footer">
           아직 계정이 없나요?
-          <a href="signup.html" id="go-signup-link">회원가입</a>
+          <a href="/signup" id="go-signup-link">회원가입</a>
         </div>
       </section>
     </main>
   </div>
 
-  <!-- AA/4337 로직 포함한 app.js 연결 -->
-  <script src="app.js"></script>
+  <script>
+    const form = document.getElementById('login-form');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const formData = new FormData(form);
+      const body = new URLSearchParams(formData); // req.body 파싱되도록 변환
+
+      try {
+        const res = await fetch('/login', {
+          method: 'POST',
+          body,
+        });
+
+        if (res.redirected) {
+          window.location.href = res.url;
+          return;
+        }
+
+        if (!res.ok) {
+          const msg = await res.text();
+          alert(msg || '로그인에 실패했습니다.');
+          return;
+        }
+
+        alert('로그인에 성공했지만, 이동할 페이지가 설정되지 않았습니다.');
+      } catch (err) {
+        console.error(err);
+        alert('로그인 중 오류가 발생했습니다.');
+      }
+    });
+  </script>
 </body>
 </html>

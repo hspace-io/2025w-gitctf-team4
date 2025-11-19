@@ -119,12 +119,25 @@ app.post('/login', async (req, res, next) => {
 
 
 // 로그아웃
-app.post('/api/logout', (req, res, next) => {
+// 로그아웃
+app.post('/api/logout', (req, res) => {
+  // 세션 삭제
   req.session.destroy((err) => {
-    if (err) return next(err);
-    res.json({ ok: true, redirectTo: '/login' });
+    if (err) {
+      console.error(err);
+      return res
+        .status(500)
+        .send('로그아웃 중 오류가 발생했습니다. 다시 시도해주세요.');
+    }
+
+    // 기본 세션 쿠키 이름이 connect.sid 라면 이렇게 제거
+    res.clearCookie('connect.sid');
+
+    // 로그아웃 후 로그인 페이지로 이동
+    return res.redirect('/login');
   });
 });
+
 
 /**
  * REST API – missions, users
