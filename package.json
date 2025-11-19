@@ -1,0 +1,19 @@
+{
+  "name": "2025w-gitctf-team4",
+  "version": "1.0.0",
+  "lockfileVersion": 3,
+  "requires": true,
+  "main": "app.js",
+  "packages": {},
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  },
+  "scripts": {
+    "dev": "nodemon app.js",
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0"
+  }
+}
