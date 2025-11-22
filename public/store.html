@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Knights Frontier – 상점</title>
+  <style>
+    :root {
+      --bg: #040818;
+      --text: #f5f7ff;
+      --muted: #b7c0ff;
+      --brand: #8fa3ff;
+      --brand-soft: #2b2f68;
+      --brand-strong: #5e79ff;
+      --card-bg: #0b1024;
+      --surface: #151937;
+      --border-subtle: #272c52;
+      --radius-lg: 22px;
+      --radius-md: 18px;
+      --radius-pill: 999px;
+      --shadow-strong: 0 18px 45px rgba(0,0,0,.55);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Noto Sans KR, system-ui, sans-serif;
+      background: radial-gradient(1400px 700px at 0% 0%, #1f2763 0%, #050619 55%);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      -webkit-font-smoothing: antialiased;
+      letter-spacing: 0.2px;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 1280px;
+      padding: 32px 24px 40px;
+    }
+
+    header {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 32px;
+      min-height: 170px;
+    }
+
+    .logo {
+      height: 120px;
+      object-fit: contain;
+    }
+
+    .header-actions {
+      position: absolute;
+      right: 0;
+      top: 16px;
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      appearance: none;
+      border-radius: var(--radius-pill);
+      padding: 10px 20px;
+      border: 1px solid rgba(159, 173, 255, 0.6);
+      background: transparent;
+      color: #e2e7ff;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.16s ease, border-color 0.16s ease,
+        color 0.16s ease, transform 0.08s ease, box-shadow 0.16s ease;
+    }
+
+    .btn:hover {
+      background: rgba(143, 163, 255, 0.18);
+      box-shadow: 0 0 0 1px rgba(143,163,255,0.4);
+    }
+
+    .btn-ghost {
+      border: none;
+      background: rgba(12, 20, 63, 0.9);
+      color: #e5e7ff;
+    }
+
+    .btn-ghost:hover {
+      background: rgba(24, 37, 99, 0.95);
+    }
+
+    @media (max-width: 768px) {
+      header {
+        justify-content: flex-start;
+        min-height: 120px;
+      }
+      .logo {
+        height: 80px;
+      }
+      .header-actions {
+        position: static;
+        margin-left: auto;
+      }
+    }
+
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+    }
+
+    .shop-container {
+      background: radial-gradient(1200px 600px at 0% 0%, #252c74 0%, #090b1f 50%, #050616 100%);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(74, 84, 143, 0.85);
+      padding: 22px 24px 24px;
+      box-shadow: var(--shadow-strong);
+    }
+
+    .shop-top-row {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .shop-tabs {
+      display: inline-flex;
+      padding: 4px;
+      border-radius: var(--radius-pill);
+      background: rgba(15, 18, 48, 0.9);
+      border: 1px solid rgba(82, 98, 189, 0.85);
+      gap: 6px;
+    }
+
+    .shop-tab {
+      border: none;
+      border-radius: var(--radius-pill);
+      padding: 8px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background 0.16s ease, color 0.16s ease;
+      white-space: nowrap;
+    }
+
+    .shop-tab.active {
+      background: linear-gradient(135deg, #4853ff, #7a64ff);
+      color: #f6f5ff;
+      box-shadow: 0 0 0 1px rgba(185, 199, 255, 0.6);
+    }
+
+    .shop-search-wrapper {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    .search {
+      background: radial-gradient(circle at 0 0, #242d6a 0%, #080b1c 60%);
+      border-radius: var(--radius-pill);
+      padding: 8px 14px;
+      border: 1px solid rgba(85, 94, 166, 0.85);
+      color: var(--text);
+      font-size: 13px;
+      min-width: 190px;
+      max-width: 260px;
+    }
+
+    .search::placeholder {
+      color: #6f78b7;
+    }
+
+    .search:focus-visible {
+      outline: none;
+      border-color: #99a7ff;
+      box-shadow: 0 0 0 1px rgba(150,164,255,0.7);
+    }
+
+    .product-count {
+      font-size: 13px;
+      color: #a4aceb;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 768px) {
+      .shop-top-row {
+        align-items: flex-start;
+      }
+      .shop-search-wrapper {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .search {
+        flex: 1;
+      }
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    /* 상품 그리드 */
+    .shop-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    @media (max-width: 1100px) {
+      .shop-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 880px) {
+      .shop-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 600px) {
+      .shop-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* 상품 카드 */
+    .item-card {
+      background: radial-gradient(circle at 0% 0%, #2b3365 0%, #141832 40%, #0a0d22 100%);
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(77, 93, 163, 0.9);
+      padding: 14px 14px 12px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 190px;
+    }
+
+    .item-category-pill {
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      background: linear-gradient(135deg, rgba(99, 115, 255, 0.32), rgba(88, 197, 255, 0.16));
+      border: 1px solid rgba(158, 180, 255, 0.7);
+      color: #dde4ff;
+    }
+
+    .item-name {
+      font-size: 15px;
+      font-weight: 800;
+      margin-top: 32px;
+      margin-bottom: 6px;
+    }
+
+    .item-desc {
+      font-size: 12px;
+      color: #c5cbff;
+      line-height: 1.5;
+      flex: 1;
+      opacity: 0.95;
+    }
+
+    /* 하단: 가격 + 구매 버튼 */
+    .item-bottom-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+      gap: 10px;
+    }
+
+    .item-price {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .coin-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #fff9c4, #f1c40f);
+      border: 2px solid #d4ac0d;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 800;
+      color: #7a5d02;
+    }
+
+    .item-price-amount {
+      color: #f7e6a5;
+    }
+
+    .item-price-label {
+      font-size: 12px;
+      color: #c6c7ff;
+      opacity: 0.9;
+    }
+
+    .buy-btn {
+      border-radius: var(--radius-pill);
+      border: none;
+      padding: 7px 18px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      background: linear-gradient(135deg, #6d7bff, #9574ff);
+      color: #f5f4ff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      transition: transform 0.08s ease, box-shadow 0.15s ease, opacity 0.15s ease, background 0.15s ease;
+    }
+
+    .buy-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(33, 44, 140, 0.65);
+    }
+
+    .buy-btn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    .buy-btn[disabled] {
+      opacity: 0.55;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .buy-btn.danger {
+      background: linear-gradient(135deg, #c93f38, #ff7361);
+    }
+
+    /* ---------- 모달 ---------- */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 5000;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .modal {
+      width: 360px;
+      max-width: calc(100% - 40px);
+      background: #13162f;
+      border-radius: 18px;
+      padding: 20px 22px;
+      border: 1px solid rgba(100,120,255,0.4);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .modal-info {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 18px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      padding: 6px 0;
+      color: #d6dbff;
+    }
+
+    .info-row span:last-child {
+      font-weight: 700;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .modal-btn {
+      padding: 8px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      border: none;
+      font-size: 14px;
+    }
+
+    .modal-btn.cancel {
+      background: rgba(255,255,255,0.1);
+      color: #c4c8e6;
+    }
+
+    .modal-btn.confirm {
+      background: #6d7bff;
+      color: #fff;
+    }
+
+    .modal-btn.confirm:hover {
+      background: #8a97ff;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="header-actions">
+        <a href="/missions" class="btn btn-ghost">미션 대시보드</a>
+        <a href="/mypage" class="btn">마이페이지</a>
+      </div>
+      <img src="logo_1.png" alt="Knights Frontier 로고" class="logo" />
+    </header>
+
+    <main>
+      <section class="shop-container" aria-label="코인샵">
+        <div class="shop-top-row">
+          <div class="shop-tabs" id="shop-tabs">
+            <button class="shop-tab active" data-filter="all">전체 상품</button>
+            <button class="shop-tab" data-filter="goods">HSPACE 굿즈</button>
+            <button class="shop-tab" data-filter="digital">디지털 상품</button>
+            <button class="shop-tab" data-filter="coupon">쿠폰</button>
+          </div>
+
+          <div class="shop-search-wrapper">
+            <span class="product-count" id="product-count">총 8개 상품</span>
+            <input
+              type="search"
+              class="search"
+              placeholder="상품 이름 검색..."
+              id="search-input"
+            />
+          </div>
+        </div>
+
+        <h2 class="section-title">전체 상품</h2>
+
+        <div class="shop-grid" id="shop-grid">
+          <article class="item-card" data-category="goods" data-price="800">
+            <span class="item-category-pill">HSPACE 굿즈</span>
+            <h3 class="item-name">HSPACE 시그니처 후드티</h3>
+            <p class="item-desc">
+              로고 자수, 기모 안감, 블랙 컬러의 시그니처 후드티.
+            </p>
+            <div class="item-bottom-row">
+              <div class="item-price">
+                <span class="coin-icon">C</span>
+                <span class="item-price-amount">800</span>
+                <span class="item-price-label">코인</span>
+              </div>
+              <button class="buy-btn" data-action="buy">구매</button>
+            </div>
+          </article>
+
+          <article class="item-card" data-category="goods" data-price="300">
+            <span class="item-category-pill">HSPACE 굿즈</span>
+            <h3 class="item-name">Knights Frontier 뱃지 세트</h3>
+            <p class="item-desc">
+              포지션 아이콘 3종이 포함된 메탈 배지 세트.
+            </p>
+            <div class="item-bottom-row">
+              <div class="item-price">
+                <span class="coin-icon">C</span>
+                <span class="item-price-amount">300</span>
+                <span class="item-price-label">코인</span>
+              </div>
+              <button class="buy-btn" data-action="buy">구매</button>
+            </div>
+          </article>
+
+          <article class="item-card" data-category="goods" data-price="150">
+            <span class="item-category-pill">HSPACE 굿즈</span>
+            <h3 class="item-name">HSPACE & 보안 밈 스티커팩</h3>
+            <p class="item-desc">
+              노트북에 붙이기 좋은 방수 스티커 10종 세트.
+            </p>
+            <div class="item-bottom-row">
+              <div class="item-price">
+                <span class="coin-icon">C</span>
+                <span class="item-price-amount">150</span>
+                <span class="item-price-label">코인</span>
+              </div>
+              <button class="buy-btn" data-action="buy">구매</button>
+            </div>
+          </article>
+
+          <article class="item-card" data-category="digital" data-price="400">
+            <span class="item-category-pill">디지털 상품</span>
+            <h3 class="item-name">보안 연구용 USB 32GB</h3>
+            <p class="item-desc">
+              실습용 VM 이미지와 툴을 저장해두기 좋은 32GB USB.
+            </p>
+            <div class="item-bottom-row">
+              <div class="item-price">
+                <span class="coin-icon">C</span>
+                <span class="item-price-amount">400</span>
+                <span class="item-price-label">코인</span>
+              </div>
+              <button class="buy-btn" data-action="buy">구매</button>
+            </div>
+          </article>
+
+          <article class="item-card" data-category="digital" data-price="550">
+            <span class="item-category-pill">디지털 상품</span>
+            <h3 class="item-name">저지연 유선 마우스</h3>
+            <p class="item-desc">
+              버튼 6개, 7200 DPI, CTF 플레이와 연습에 최적화된 유선 마우스.
+            </p>
+            <div class="item-bottom-row">
+              <div class="item-price">
+                <span class="coin-icon">C</span>
+                <span class="item-price-amount">550</span>
+                <span class="item-price-label">코인</span>
+              </div>
+              <button class="buy-btn" data-action="buy">구매</button>
+            </div>
+          </article>
+
+          <article class="item-card" data-category="coupon" data-price="120">
+            <span class="item-category-pill">쿠폰</span>
+            <h3 class="item-name">커피 쿠폰 1잔</h3>
+            <p class="item-desc">
+              제휴 카페 아메리카노 1잔 쿠폰.
+            </p>
+            <div class="item-bottom-row">
+              <div class="item-price">
+                <span class="coin-icon">C</span>
+                <span class="item-price-amount">120</span>
+                <span class="item-price-label">코인</span>
+              </div>
+              <button class="buy-btn" data-action="buy">구매</button>
+            </div>
+          </article>
+
+          <article class="item-card" data-category="coupon" data-price="330">
+            <span class="item-category-pill">쿠폰</span>
+            <h3 class="item-name">커피 쿠폰 3잔 패키지</h3>
+            <p class="item-desc">
+              모임이나 팀 회의 때 쓰기 좋은 커피 쿠폰 3잔 세트.
+            </p>
+            <div class="item-bottom-row">
+              <div class="item-price">
+                <span class="coin-icon">C</span>
+                <span class="item-price-amount">330</span>
+                <span class="item-price-label">코인</span>
+              </div>
+              <button class="buy-btn" data-action="buy">구매</button>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 class="modal-title">구매 확인</h3>
+
+      <div class="modal-info">
+        <div class="info-row">
+          <span>현재 보유 코인</span>
+          <span id="modal-current"></span>
+        </div>
+        <div class="info-row">
+          <span>상품 가격</span>
+          <span id="modal-price"></span>
+        </div>
+        <div class="info-row">
+          <span>구매 후 잔여 코인</span>
+          <span id="modal-result"></span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-btn cancel" id="modal-cancel">취소</button>
+        <button class="modal-btn confirm" id="modal-confirm">구매하기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 데모용: 유저 보유 코인 (실제 서비스에서는 서버에서 받아오는 값)
+    let userCoins = 1000;
+
+    const shopGrid = document.getElementById("shop-grid");
+    const tabs = document.querySelectorAll(".shop-tab");
+    const searchInput = document.getElementById("search-input");
+    const productCountEl = document.getElementById("product-count");
+    const cards = Array.from(shopGrid.querySelectorAll(".item-card"));
+
+    const modalOverlay = document.getElementById("modal-overlay");
+    const modalCurrent = document.getElementById("modal-current");
+    const modalPrice = document.getElementById("modal-price");
+    const modalResult = document.getElementById("modal-result");
+    const modalCancel = document.getElementById("modal-cancel");
+    const modalConfirm = document.getElementById("modal-confirm");
+
+    let pendingItem = null;
+    let pendingPrice = 0;
+
+    function updateCount() {
+      const visible = cards.filter(c => c.style.display !== "none");
+      productCountEl.textContent = `총 ${visible.length}개 상품`;
+    }
+
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        tabs.forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        applyFilters();
+      });
+    });
+
+    function applyFilters() {
+      const activeTab = document.querySelector(".shop-tab.active");
+      const filter = activeTab ? activeTab.dataset.filter : "all";
+      const keyword = (searchInput.value || "").toLowerCase();
+
+      cards.forEach(card => {
+        const category = card.dataset.category;
+        const text = card.textContent.toLowerCase();
+        const matchCategory = filter === "all" || filter === category;
+        const matchKeyword = !keyword || text.includes(keyword);
+        card.style.display = matchCategory && matchKeyword ? "" : "none";
+      });
+
+      updateCount();
+    }
+
+    searchInput.addEventListener("input", applyFilters);
+    updateCount();
+
+    shopGrid.addEventListener("click", (e) => {
+      const btn = e.target.closest(".buy-btn");
+      if (!btn || btn.disabled) return;
+
+      const card = btn.closest(".item-card");
+      const price = Number(card.dataset.price);
+
+      pendingItem = card;
+      pendingPrice = price;
+
+      modalCurrent.textContent = userCoins;
+      modalPrice.textContent = price;
+
+      const result = userCoins - price;
+      modalResult.textContent = result >= 0 ? result : "코인 부족";
+
+      modalOverlay.classList.remove("hidden");
+    });
+
+    modalCancel.addEventListener("click", () => {
+      pendingItem = null;
+      pendingPrice = 0;
+      modalOverlay.classList.add("hidden");
+    });
+
+    modalConfirm.addEventListener("click", () => {
+      if (!pendingItem) return;
+
+      if (userCoins < pendingPrice) {
+        alert("코인이 부족합니다!");
+        modalOverlay.classList.add("hidden");
+        pendingItem = null;
+        pendingPrice = 0;
+        return;
+      }
+
+      userCoins -= pendingPrice;
+
+      const btn = pendingItem.querySelector(".buy-btn");
+      btn.textContent = "구매 완료";
+      btn.disabled = true;
+
+      modalOverlay.classList.add("hidden");
+      pendingItem = null;
+      pendingPrice = 0;
+    });
+  </script>
+</body>
+</html>

@@ -11,6 +11,7 @@ const HTML = {
   SIGNUP: path.join(PUBLIC_DIR, 'signup.html'),   
   MYPAGE: path.join(PUBLIC_DIR, 'mypage.html'), 
   EDIT_PROFILE: path.join(PUBLIC_DIR, 'views/edit_profile.ejs'),
+  STORE: path.join(PUBLIC_DIR, 'store.html')
 };
 
 module.exports = {
