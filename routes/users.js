@@ -15,6 +15,36 @@ router.get('/', (req, res) => {
   res.json(users);
 });
 
+/**
+ * GET /api/users/me
+ * - 현재 로그인한 유저의 정보 반환
+ */
+router.get('/me', async (req, res, next) => {
+  try {
+    // 세션에 userId가 없으면 401
+    if (!req.session.userId) {
+      return res.status(401).json({ error: '로그인이 필요합니다.' });
+    }
+
+    // DB에서 유저 정보 조회
+    const user = await userRepo.findById(req.session.userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: '유저를 찾을 수 없습니다.' });
+    }
+
+    // 비밀번호 해시는 제외하고 반환
+    res.json({
+      id: user.id,
+      email: user.email,
+      nickname: user.nickname,
+      createdAt: user.created_at,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /api/users/:id
 router.get('/:id', (req, res) => {
   const id = Number(req.params.id);
