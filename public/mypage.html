@@ -227,6 +227,33 @@
     }
   </style>
 </head>
+<script>
+  async function loadUserInfo() {
+    try {
+      const response = await fetch('/api/users/me');
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          window.location.href = '/login';
+          return;
+        }
+        throw new Error('유저 정보를 불러올 수 없습니다.');
+      }
+
+      const user = await response.json();
+      const profileValues = document.querySelectorAll('.profile-value');
+      
+      profileValues[0].textContent = user.nickname;
+      profileValues[2].textContent = user.email;
+      
+    } catch (error) {
+      console.error('Error loading user info:', error);
+      alert('유저 정보를 불러오는데 실패했습니다.');
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', loadUserInfo);
+</script>
 <body>
   <div class="page">
     <header>
