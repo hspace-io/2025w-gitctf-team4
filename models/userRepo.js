@@ -35,22 +35,6 @@ function findById(userId) {
 }
 
 /**
- * id로 유저 한 명 찾기
- */
-function findById(id) {
-  return new Promise((resolve, reject) => {
-    db.get(
-      'SELECT id, email, nickname, created_at FROM users WHERE id = ?',
-      [id],
-      (err, row) => {
-        if (err) return reject(err);
-        resolve(row || null);
-      },
-    );
-  });
-}
-
-/**
  * 새 유저 생성 (회원가입)
  *  - { email, passwordHash, nickname }
  */
