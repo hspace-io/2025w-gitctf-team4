@@ -73,6 +73,11 @@ app.get('/signup', (req, res) => {
   return res.sendFile(paths.HTML.SIGNUP); // paths.HTML에 SIGNUP 추가 필요
 });
 
+// 상점 페이지 (보호)
+app.get('/store', requireLogin, (req, res) => {
+  res.sendFile(paths.HTML.STORE);
+});
+
 // 게시판 메인 페이지 (보호)
 app.get('/main', requireLogin, (req, res) => {
   res.sendFile(paths.HTML.MAIN);
