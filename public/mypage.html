@@ -4,251 +4,235 @@
   <meta charset="UTF-8" />
   <title>Knights Frontier – 마이페이지</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    * { 
+      box-sizing: border-box; 
+      margin: 0; padding: 0; 
     }
 
-    body {
-      min-height: 100vh;
-      background: #040818;
-      color: #f5f5f5;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      display: flex;
-      justify-content: center;
+    body { 
+      min-height: 100vh; 
+      background: #040818; 
+      color: #f5f5f5; 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; 
+      display: flex; 
+      justify-content: center; 
     }
 
-    .page {
-      width: 100%;
-      max-width: 1280px;
-      padding: 32px 24px 40px;
+    .page { 
+      width: 100%; 
+      max-width: 1280px; 
+      padding: 32px 24px 40px; 
     }
 
-    header {
-      position: relative;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 32px;
+    header { position: relative; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      margin-bottom: 32px; 
     }
 
-    header img {
-      height: 110px;
-      object-fit: contain;
+    header img { 
+      height: 110px; 
+      object-fit: contain; 
     }
 
-    .header-actions {
-      position: absolute;
-      right: 0;
-      top: 8px;
-      display: flex;
-      gap: 10px;
+    .header-actions { 
+      position: absolute; 
+      right: 0; 
+      top: 8px; 
+      display: flex; 
+      gap: 10px; 
     }
 
-    .header-btn {
-      padding: 6px 14px;
-      border-radius: 999px;
-      font-size: 13px;
-      font-weight: 600;
-      border: 1px solid #8fa3ff;
-      background: transparent;
-      color: #e2e7ff;
-      cursor: pointer;
-      text-decoration: none;
-      transition: background 0.15s ease-out, color 0.15s ease-out,
-        border-color 0.15s ease-out;
+    .header-btn { 
+      padding: 6px 14px; 
+      border-radius: 999px; 
+      font-size: 13px; 
+      font-weight: 600; 
+      border: 1px solid #8fa3ff; 
+      background: transparent; 
+      color: #e2e7ff; 
+      cursor: pointer; 
+      text-decoration: none; 
+      transition: all 0.15s; 
     }
 
-    .header-btn.primary {
-      border-color: #27ae60;
-      color: #d8ffe7;
+    .header-btn.primary { 
+      border-color: #27ae60; 
+      color: #d8ffe7; 
     }
 
-    .header-btn:hover {
-      background: rgba(143, 163, 255, 0.22);
+    .header-btn:hover { 
+      background: rgba(143, 163, 255, 0.22); 
     }
 
-    .header-btn.primary:hover {
-      background: rgba(39, 174, 96, 0.25);
+    .content { 
+      display: flex; 
+      gap: 32px; 
     }
 
-    .content {
-      display: flex;
-      gap: 32px;
+    .card { 
+      background: #dde5f5; 
+      color: #1a2438; 
+      border-radius: 18px; 
+      padding: 24px 28px; 
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45); 
     }
 
-    .card {
-      background: #dde5f5;
-      color: #1a2438;
-      border-radius: 18px;
-      padding: 24px 28px;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    .profile-card { 
+      width: 360px; 
     }
 
-    .profile-card {
-      width: 360px;
+    .profile-title { 
+      font-size: 20px; 
+      font-weight: 700; 
+      margin-bottom: 16px; 
     }
 
-    .profile-title {
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 16px;
+    .profile-row { 
+      display: flex; 
+      align-items: center; 
+      margin-bottom: 10px; 
+      font-size: 15px; 
     }
 
-    .profile-row {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
-      font-size: 15px;
+    .profile-label { 
+      width: 80px; 
+      font-weight: 600; 
+      color: #2c3e50; 
     }
 
-    .profile-label {
-      width: 80px;
-      font-weight: 600;
-      color: #2c3e50;
+    .profile-value { 
+      flex: 1; 
     }
 
-    .profile-value {
-      flex: 1;
+    .badge { 
+      display: inline-block; 
+      padding: 4px 10px; 
+      border-radius: 999px; 
+      background: #4a6bff; 
+      color: #f5f7ff; 
+      font-size: 12px; 
+      font-weight: 600; 
+      margin-top: 6px; 
     }
 
-    .badge {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: #4a6bff;
-      color: #f5f7ff;
-      font-size: 12px;
-      font-weight: 600;
-      margin-top: 6px;
+    .action-row { 
+      margin-top: 18px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      gap: 10px; 
     }
 
-    .action-row {
-      margin-top: 18px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
+    .edit-btn, .logout-btn { 
+      padding: 8px 16px; 
+      color: #ffffff; 
+      border: none; 
+      border-radius: 999px; 
+      font-size: 13px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      text-decoration: none; 
     }
 
-    .edit-btn {
-      padding: 8px 16px;
-      background: #3498db;
-      color: #ffffff;
-      border: none;
-      border-radius: 999px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-block;
-      transition: background 0.15s ease-out, transform 0.08s ease-out;
+    .edit-btn { 
+      background: #3498db; 
+    } 
+    
+    .logout-btn { 
+      background: #c0392b; 
     }
 
-    .edit-btn:hover {
-      background: #5dade2;
-      transform: translateY(-1px);
+    .stats-card { 
+      flex: 1; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 18px; 
     }
 
-    .edit-btn:active {
-      transform: translateY(0);
+    .stats-section-title { 
+      font-size: 18px; 
+      font-weight: 700; 
+      margin-bottom: 10px; 
     }
 
-    .logout-btn {
-      padding: 8px 16px;
-      background: #c0392b;
-      color: #ffffff;
-      border: none;
-      border-radius: 999px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s ease-out, transform 0.08s ease-out;
+    .stat-row { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 8px; 
+      font-size: 15px; 
     }
 
-    .logout-btn:hover {
-      background: #e74c3c;
-      transform: translateY(-1px);
+    .stat-label { 
+      color: #2c3e50; 
     }
 
-    .logout-btn:active {
-      transform: translateY(0);
-    }
-
-    .stats-card {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
-
-    .stats-section-title {
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 10px;
-    }
-
-    .stat-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-      font-size: 15px;
-    }
-
-    .stat-label {
-      color: #2c3e50;
-    }
-
-    .stat-value {
+    .stat-value { 
       font-weight: 700;
     }
 
-    .coin-icon {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 30% 30%, #fff9c4, #f1c40f);
-      border: 2px solid #d4ac0d;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: 700;
-      color: #8e6b02;
-      margin-right: 6px;
+    .coin-icon { 
+      width: 20px; 
+      height: 20px; 
+      border-radius: 50%; 
+      background: radial-gradient(circle at 30% 30%, #fff9c4, #f1c40f); 
+      border: 2px solid #d4ac0d; 
+      display: inline-flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-size: 11px; 
+      font-weight: 700; 
+      color: #8e6b02; 
+      margin-right: 6px; 
     }
 
-    .recent-list {
-      margin-top: 6px;
-      padding-left: 16px;
-      font-size: 14px;
-      color: #34495e;
+    .recent-list { 
+      margin-top: 6px; 
+      padding-left: 16px; 
+      font-size: 14px; 
+      color: #34495e; 
     }
 
-    .recent-list li {
-      margin-bottom: 4px;
+    .recent-list li { 
+      margin-bottom: 6px; 
+    }
+    
+    /* 상태별 색상 */
+    .status-success { 
+      color: #27ae60; 
+      font-weight: bold; 
     }
 
-    @media (max-width: 768px) {
-      .content {
-        flex-direction: column;
-      }
+    .status-fail { 
+      color: #c0392b; 
+      font-weight: bold;
+    }
 
-      .profile-card {
-        width: 100%;
-        max-width: 360px;
-      }
+    .status-pending { 
+      color: #f39c12; 
+      font-weight: bold; 
+    }
 
-      header {
-        margin-bottom: 24px;
-      }
+    @media (max-width: 768px) { 
+      .content { 
+        flex-direction: column; 
+      } 
 
-      .header-actions {
-        position: static;
-        margin-left: auto;
-      }
+      .profile-card { 
+        width: 100%; 
+        max-width: 360px; 
+      } 
+
+      header { 
+        margin-bottom: 24px; 
+      } 
+      
+      .header-actions { 
+        position: static; 
+        margin-left: auto; 
+      } 
     }
   </style>
 </head>
@@ -265,15 +249,46 @@
         throw new Error('유저 정보를 불러올 수 없습니다.');
       }
 
-      const user = await response.json();
-      const profileValues = document.querySelectorAll('.profile-value');
+      const data = await response.json();
       
-      profileValues[0].textContent = user.nickname;
-      profileValues[2].textContent = user.email;
+      // 1. 프로필 정보
+      document.getElementById('user-nickname').textContent = data.nickname;
+      document.getElementById('user-role').textContent = (data.role === 'knight') ? '🛡️ 기사' : '⚔️ 평기사';
+      document.getElementById('user-email').textContent = data.email;
+
+      // 2. 통계 정보(코인, 완료 미션, 전체 미션)
+      document.getElementById('user-coin').textContent = `${data.coin} 개`;
+      document.getElementById('stat-completed').textContent = `${data.stats.completed} 개`;
+      document.getElementById('stat-total').textContent = `${data.stats.total} 개`;
+
+      // 3. 최근 활동 내역
+      const listEl = document.getElementById('recent-activity-list');
+      listEl.innerHTML = '';
+
+      if (!data.recentActivities || data.recentActivities.length === 0) {
+        listEl.innerHTML = '<li>최근 활동 내역이 없습니다.</li>';
+      } else {
+        data.recentActivities.forEach(act => {
+          // 날짜 변환
+          const date = new Date(act.created_at).toLocaleDateString();
+          
+          // 상태(pending, success, fail)에 따라 글자랑 색상 선택
+          let statusText = '';
+          let statusClass = '';
+          if (act.status === 'success') { statusText = '성공'; statusClass = 'status-success'; }
+          else if (act.status === 'fail') { statusText = '실패'; statusClass = 'status-fail'; }
+          else { statusText = '대기중'; statusClass = 'status-pending'; }
+
+          const li = document.createElement('li');
+          li.innerHTML = `
+            [${date}] <b>${act.title}</b> 제출 - <span class="${statusClass}">${statusText}</span>
+          `;
+          listEl.appendChild(li);
+        });
+      }
       
     } catch (error) {
       console.error('Error loading user info:', error);
-      alert('유저 정보를 불러오는데 실패했습니다.');
     }
   }
 
@@ -283,79 +298,65 @@
   <div class="page">
     <header>
       <div class="header-actions">
-        <!-- 대시보드로 -->
         <a href="/main" class="header-btn">대시보드</a>
-        <!-- 상점 -->
         <a href="/store" class="header-btn">상점</a>
-        <!-- 현재 페이지 강조 -->
         <a href="/mypage" class="header-btn primary">마이페이지</a>
       </div>
-
       <img src="logo_1.png" alt="Knights Frontier 로고" />
     </header>
 
     <main class="content">
-      <!-- 왼쪽: 프로필 -->
       <section class="card profile-card">
         <div class="profile-title">내 기사 프로필</div>
 
         <div class="profile-row">
           <div class="profile-label">닉네임</div>
-          <div class="profile-value">guest_knight</div>
+          <div class="profile-value" id="user-nickname">-</div>
         </div>
 
         <div class="profile-row">
           <div class="profile-label">등급</div>
-          <div class="profile-value">브론즈 기사</div>
+          <div class="profile-value" id="user-role">-</div>
         </div>
 
         <div class="profile-row">
           <div class="profile-label">이메일</div>
-          <div class="profile-value">you@example.com</div>
+          <div class="profile-value" id="user-email">-</div>
         </div>
 
         <span class="badge">CTF 미션 수련 중</span>
 
         <div class="action-row">
-          <!-- 회원 정보 수정 버튼 -->
           <a href="/edit-profile" class="edit-btn">정보 수정</a>
-          
-          <!-- 로그아웃 버튼 -->
           <form id="logout-form" method="POST" action="/api/logout" style="margin: 0;">
             <button type="submit" class="logout-btn">로그아웃</button>
           </form>
         </div>
       </section>
 
-      <!-- 오른쪽: 통계/최근 미션 -->
       <section class="card stats-card">
         <div>
           <div class="stats-section-title">나의 보상 & 미션 현황</div>
 
           <div class="stat-row">
-            <span class="stat-label">
-              <span class="coin-icon">C</span>
-              보유 코인
-            </span>
-            <span class="stat-value">0 개</span>
+            <span class="stat-label"><span class="coin-icon">C</span>보유 코인</span>
+            <span class="stat-value" id="user-coin">0 개</span>
           </div>
 
           <div class="stat-row">
             <span class="stat-label">완료한 미션</span>
-            <span class="stat-value">0 개</span>
+            <span class="stat-value" id="stat-completed">0 개</span>
           </div>
 
           <div class="stat-row">
             <span class="stat-label">진행 중인 미션</span>
-            <span class="stat-value">0 개</span>
+            <span class="stat-value" id="stat-total">0 개</span>
           </div>
         </div>
 
         <div>
           <div class="stats-section-title">최근 미션 활동</div>
-          <ul class="recent-list">
-            <li>아직 완료된 미션이 없습니다.</li>
-            <!-- 나중에 서버에서 최근 미션 불러와서 채우면 됨 -->
+          <ul class="recent-list" id="recent-activity-list">
           </ul>
         </div>
       </section>

@@ -9,7 +9,7 @@ const bcrypt = require('bcrypt');
 function findByEmail(email) {
   return new Promise((resolve, reject) => {
     db.get(
-      'SELECT id, email, password_hash, nickname, created_at FROM users WHERE email = ?',
+      'SELECT id, email, password_hash, nickname, role, coin, created_at FROM users WHERE email = ?',
       [email],
       (err, row) => {
         if (err) return reject(err);
@@ -22,7 +22,7 @@ function findByEmail(email) {
 function findById(userId) {
   return new Promise((resolve, reject) => {
     db.get(
-      'SELECT id, email, password_hash, nickname, created_at FROM users WHERE id = ?',
+      'SELECT id, email, password_hash, nickname, role, coin, created_at FROM users WHERE id = ?',
       [userId],
       (err, row) => {
         if (err) {
@@ -38,10 +38,10 @@ function findById(userId) {
  * 새 유저 생성 (회원가입)
  *  - { email, passwordHash, nickname, coin(기본값 0) }
  */
-function createUser({ email, passwordHash, nickname }) {
+function createUser({ email, passwordHash, nickname, role = 'user' }) {
   return new Promise((resolve, reject) => {
     const sql =
-      'INSERT INTO users (email, password_hash, nickname) VALUES (?, ?, ?)';
+      'INSERT INTO users (email, password_hash, nickname, role, coin) VALUES (?, ?, ?, ?, 0)';
     db.run(sql, [email, passwordHash, nickname], function (err) {
       if (err) {
         return reject(err);
@@ -51,6 +51,7 @@ function createUser({ email, passwordHash, nickname }) {
         id: this.lastID,
         email,
         nickname,
+        role,
         coin: 0
       });
     });

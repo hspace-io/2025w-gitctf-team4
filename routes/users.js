@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');               // 🔹 비밀번호 해시용
 const userRepo = require('../models/userRepo'); // 🔹 로그인/회원가입용 "DB 계층"
+const db = require('../db');
 
 /**
  * 로그인 체크 미들웨어
@@ -14,12 +15,6 @@ function requireLogin(req, res, next) {
   next();
 }
 
-// 임시 데이터 (나중에 게임 내 기사 정보 등으로 써도 됨)
-let users = [
-  { id: 1, name: '기사 A', level: 5 },
-  { id: 2, name: '기사 B', level: 10 },
-];
-
 // GET /api/users
 router.get('/', (req, res) => {
   res.json(users);
@@ -27,7 +22,7 @@ router.get('/', (req, res) => {
 
 /**
  * GET /api/users/me
- * - 현재 로그인한 유저의 정보 반환
+ * - 현재 로그인한 유저의 정보 + 최근 활동 반환
  */
 router.get('/me', async (req, res, next) => {
   try {
@@ -37,18 +32,57 @@ router.get('/me', async (req, res, next) => {
     }
 
     // DB에서 유저 정보 조회
-    const user = await userRepo.findById(req.session.userId);
+    const userId = req.session.userId;
+    const user = await userRepo.findById(userId);
     
     if (!user) {
       return res.status(404).json({ error: '유저를 찾을 수 없습니다.' });
     }
+
+    //완료한 미션 수
+    const completedCount = await new Promise((resolve, reject) => {
+      db.get(
+        "SELECT COUNT(*) as cnt FROM submissions WHERE user_id = ? AND status = 'success'",
+        [userId],
+        (err, row) => (err ? reject(err) : resolve(row ? row.cnt : 0))
+      );
+    });
+
+    //진행 중인 미션 수
+    const totalMissionsCount = await new Promise((resolve, reject) => {
+      db.get(
+        "SELECT COUNT(*) as cnt FROM missions",
+        [],
+        (err, row) => (err ? reject(err) : resolve(row ? row.cnt : 0))
+      );
+    });
+
+    //최근 완료한 미션(5개)
+    const recentActivities = await new Promise((resolve, reject) => {
+      const sql = `
+        SELECT s.status, s.created_at, m.title 
+        FROM submissions s
+        JOIN missions m ON s.mission_id = m.id
+        WHERE s.user_id = ?
+        ORDER BY s.created_at DESC
+        LIMIT 5
+      `;
+      db.all(sql, [userId], (err, rows) => (err ? reject(err) : resolve(rows || [])));
+    });
 
     // 비밀번호 해시는 제외하고 반환
     res.json({
       id: user.id,
       email: user.email,
       nickname: user.nickname,
+      role: user.role,
+      coin: user.coin,
       createdAt: user.created_at,
+      stats: {
+        completed: completedCount,
+        total: totalMissionsCount,
+      },
+      recentActivities: recentActivities
     });
   } catch (err) {
     next(err);

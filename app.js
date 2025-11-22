@@ -139,6 +139,7 @@ app.post('/login', async (req, res, next) => {
     // 4) 세션에 유저 정보 저장
     req.session.userId = user.id;
     req.session.userEmail = user.email;
+    req.session.role = user.role;
 
     // 5) 성공하면 main.html로 리다이렉트
     return res.redirect('/main');
@@ -189,6 +190,22 @@ app.use((err, req, res, next) => {
   res
     .status(500)
     .json({ error: 'Internal server error', message: err.message });
+});
+
+//권한 습득(임시) 삭제 필수
+app.get('/cheat/become-knight', (req, res) => {
+  if (!req.session.userId) return res.send('로그인 먼저 하세요.');
+  
+  const db = require('./db');
+  db.run("UPDATE users SET role = 'knight' WHERE id = ?", [req.session.userId], (err) => {
+    if (err) return res.send('에러남: ' + err.message);
+    
+    // 세션 정보도 갱신
+    req.session.role = 'knight';
+    res.send(`
+      <a href="/main">메인으로 돌아가기</a>
+    `);
+  });
 });
 
 module.exports = app;
