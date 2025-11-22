@@ -6,6 +6,7 @@ const config = require('./config/config');
 
 const missionsRouter = require('./routes/missions');
 const usersRouter = require('./routes/users');
+const shopRouter = require('./routes/shop');
 const userRepo = require('./models/userRepo');
 
 const app = express();
@@ -167,10 +168,11 @@ app.post('/api/logout', (req, res) => {
 });
 
 /**
- * REST API – missions, users
+ * REST API – missions, users, shop
  */
 app.use('/api/missions', missionsRouter);
 app.use('/api/users', usersRouter);
+app.use('/api/shop', requireLogin, shopRouter);
 
 // 헬스체크
 app.get('/api/health', (req, res) => {

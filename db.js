@@ -18,6 +18,7 @@ db.serialize(() => {
       email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       nickname TEXT NOT NULL,
+      coin INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);

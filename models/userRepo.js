@@ -36,7 +36,7 @@ function findById(userId) {
 
 /**
  * 새 유저 생성 (회원가입)
- *  - { email, passwordHash, nickname }
+ *  - { email, passwordHash, nickname, coin(기본값 0) }
  */
 function createUser({ email, passwordHash, nickname }) {
   return new Promise((resolve, reject) => {
@@ -51,6 +51,7 @@ function createUser({ email, passwordHash, nickname }) {
         id: this.lastID,
         email,
         nickname,
+        coin: 0
       });
     });
   });
@@ -81,6 +82,52 @@ async function verifyPassword(user, plainPassword) {
   return bcrypt.compare(plainPassword, user.password_hash);
 }
 
+// 코인 조회
+function getCoin(userId) {
+  return new Promise((resolve, reject) => {
+    db.get(
+      'SELECT coin FROM users WHERE id = ?',
+      [userId],
+      (err, row) => {
+        if (err) return reject(err);
+        resolve(row ? row.coin : 0);
+      }
+    );
+  });
+}
+
+/**
+ * 코인 추가 (미션 완료 시 등)
+ */
+function addCoin(userId, amount) {
+  return new Promise((resolve, reject) => {
+    db.run(
+      'UPDATE users SET coin = coin + ? WHERE id = ?',
+      [amount, userId],
+      function (err) {
+        if (err) return reject(err);
+        resolve(this.changes);
+      }
+    );
+  });
+}
+
+/**
+ * 코인 차감 (상점 구매 시)
+ */
+function useCoin(userId, amount) {
+  return new Promise((resolve, reject) => {
+    db.run(
+      'UPDATE users SET coin = coin - ? WHERE id = ? AND coin >= ?',
+      [amount, userId, amount],
+      function (err) {
+        if (err) return reject(err);
+        resolve(this.changes); // 성공시 1, 실패(코인부족)시 0
+      }
+    );
+  });
+}
+
 module.exports = {
   findByEmail,
   findById,
@@ -88,4 +135,7 @@ module.exports = {
   updateUser,
   verifyPassword,
   findById,
+  getCoin,
+  addCoin,
+  useCoin,
 };
