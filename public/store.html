@@ -27,19 +27,13 @@
       padding: 0;
     }
 
-    html, body {
-      height: 100%;
-    }
-
     body {
       min-height: 100vh;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Noto Sans KR, system-ui, sans-serif;
-      background: radial-gradient(1400px 700px at 0% 0%, #1f2763 0%, #050619 55%);
-      color: var(--text);
+      background: #040818;
+      color: #f5f5f5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       display: flex;
       justify-content: center;
-      -webkit-font-smoothing: antialiased;
-      letter-spacing: 0.2px;
     }
 
     .page {
@@ -57,61 +51,59 @@
       min-height: 170px;
     }
 
-    .logo {
-      height: 120px;
+    header {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    header img {
+      height: 110px;
       object-fit: contain;
     }
 
     .header-actions {
       position: absolute;
       right: 0;
-      top: 16px;
+      top: 8px;
       display: flex;
-      gap: 12px;
+      gap: 10px;
     }
 
-    .btn {
-      appearance: none;
-      border-radius: var(--radius-pill);
-      padding: 10px 20px;
-      border: 1px solid rgba(159, 173, 255, 0.6);
+    .header-btn {
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid #8fa3ff;
       background: transparent;
       color: #e2e7ff;
-      font-size: 14px;
-      font-weight: 700;
-      text-decoration: none;
       cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: background 0.16s ease, border-color 0.16s ease,
-        color 0.16s ease, transform 0.08s ease, box-shadow 0.16s ease;
+      text-decoration: none;
+      transition: background 0.15s ease-out, color 0.15s ease-out,
+        border-color 0.15s ease-out;
     }
 
-    .btn:hover {
-      background: rgba(143, 163, 255, 0.18);
-      box-shadow: 0 0 0 1px rgba(143,163,255,0.4);
+    .header-btn.primary {
+      border-color: #27ae60;
+      color: #d8ffe7;
     }
 
-    .btn-ghost {
-      border: none;
-      background: rgba(12, 20, 63, 0.9);
-      color: #e5e7ff;
+    .header-btn:hover {
+      background: rgba(143, 163, 255, 0.22);
     }
 
-    .btn-ghost:hover {
-      background: rgba(24, 37, 99, 0.95);
+    .header-btn.primary:hover {
+      background: rgba(39, 174, 96, 0.25);
     }
 
     @media (max-width: 768px) {
       header {
-        justify-content: flex-start;
-        min-height: 120px;
+        margin-bottom: 24px;
       }
-      .logo {
-        height: 80px;
-      }
+
       .header-actions {
         position: static;
         margin-left: auto;
@@ -450,10 +442,10 @@
   <div class="page">
     <header>
       <div class="header-actions">
-        <a href="/missions" class="btn btn-ghost">미션 대시보드</a>
-        <a href="/mypage" class="btn">마이페이지</a>
+        <a href="/main" class="header-btn">미션 대시보드</a>
+        <a href="/mypage" class="header-btn primary">마이페이지</a>
       </div>
-      <img src="logo_1.png" alt="Knights Frontier 로고" class="logo" />
+      <img src="logo_1.png" alt="Knights Frontier 로고" />
     </header>
 
     <main>
