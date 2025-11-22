@@ -10,6 +10,10 @@ const userRepo = require('./models/userRepo');
 
 const app = express();
 
+// 회원정보 수정 페이지에서 템플릿 사용을 위해 추가
+app.set('view engine', 'ejs');
+app.set('views', './public/views');
+
 // JSON body 파싱
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -79,6 +83,26 @@ app.get('/mypage', requireLogin, (req, res) => {
   res.sendFile(paths.HTML.MYPAGE);
 });
 
+//회원정보 수정
+app.get('/edit-profile', requireLogin,  async (req, res, next) => {
+   try {
+    const userId = req.session.userId;
+    
+    // DB에서 사용자 정보 가져오기
+    const user = await userRepo.findById(userId);
+    
+    if (!user) {
+      return res.status(404).send('사용자를 찾을 수 없습니다.');
+    }
+    
+    // EJS 템플릿에 데이터 전달
+    res.render('edit-profile', { user });
+    
+  } catch (err) {
+    next(err);
+  }
+});
+
 /**
  * 로그인 / 로그아웃 API
  */
@@ -117,7 +141,6 @@ app.post('/login', async (req, res, next) => {
   }
 });
 
-
 // 로그아웃
 // 로그아웃
 app.post('/api/logout', (req, res) => {
@@ -137,7 +160,6 @@ app.post('/api/logout', (req, res) => {
     return res.redirect('/login');
   });
 });
-
 
 /**
  * REST API – missions, users

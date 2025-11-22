@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>Knights Frontier – 회원정보 수정</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #040818;
+      color: #f5f5f5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: flex;
+      justify-content: center;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 1280px;
+      padding: 32px 24px 40px;
+    }
+
+    header {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    header img {
+      height: 110px;
+      object-fit: contain;
+    }
+
+    .header-actions {
+      position: absolute;
+      right: 0;
+      top: 8px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .header-btn {
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid #8fa3ff;
+      background: transparent;
+      color: #e2e7ff;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s ease-out, color 0.15s ease-out,
+        border-color 0.15s ease-out;
+    }
+
+    .header-btn:hover {
+      background: rgba(143, 163, 255, 0.22);
+    }
+
+    .content {
+      display: flex;
+      justify-content: center;
+    }
+
+    .card {
+      background: #dde5f5;
+      color: #1a2438;
+      border-radius: 18px;
+      padding: 32px 40px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+      width: 100%;
+      max-width: 580px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #1a2438;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: #5a6c7d;
+      margin-bottom: 28px;
+    }
+
+    .form-group {
+      margin-bottom: 22px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 8px;
+    }
+
+    .form-label .required {
+      color: #e74c3c;
+      margin-left: 3px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #b8c5d6;
+      border-radius: 10px;
+      font-size: 15px;
+      background: #ffffff;
+      color: #1a2438;
+      transition: border-color 0.2s ease-out, box-shadow 0.2s ease-out;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #4a6bff;
+      box-shadow: 0 0 0 3px rgba(74, 107, 255, 0.15);
+    }
+
+    .form-input:disabled {
+      background: #e8ecf1;
+      color: #7f8c9a;
+      cursor: not-allowed;
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: #7f8c9a;
+      margin-top: 6px;
+    }
+
+    .password-section {
+      background: #f4f7fa;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 22px;
+    }
+
+    .password-section-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #2c3e50;
+      margin-bottom: 16px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 2px solid #c8d4e3;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 999px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease-out, transform 0.08s ease-out;
+    }
+
+    .btn-primary {
+      background: #27ae60;
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: #2ecc71;
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: #95a5a6;
+      color: #ffffff;
+    }
+
+    .btn-secondary:hover {
+      background: #b4bec0;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary:active {
+      transform: translateY(0);
+    }
+
+    .info-box {
+      background: #fff9e6;
+      border-left: 4px solid #f1c40f;
+      padding: 14px 16px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }
+
+    .info-box-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #8e6b02;
+      margin-bottom: 6px;
+    }
+
+    .info-box-text {
+      font-size: 12px;
+      color: #6b5a0f;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 768px) {
+      .page {
+        padding: 24px 16px 32px;
+      }
+
+      .card {
+        padding: 24px 20px;
+      }
+
+      header {
+        margin-bottom: 24px;
+      }
+
+      .header-actions {
+        position: static;
+        margin-left: auto;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="header-actions">
+        <a href="/main" class="header-btn">대시보드</a>
+        <a href="/mypage" class="header-btn">마이페이지</a>
+      </div>
+
+      <img src="logo_1.png" alt="Knights Frontier 로고" />
+    </header>
+
+    <main class="content">
+      <section class="card">
+        <h1 class="page-title">회원정보 수정</h1>
+        <p class="page-subtitle">회원님의 정보를 안전하게 관리하세요</p>
+
+        <div class="info-box">
+          <div class="info-box-title">⚠️ 보안 안내</div>
+          <div class="info-box-text">
+            비밀번호를 변경하지 않으려면 해당 필드를 비워두세요.
+          </div>
+        </div>
+
+        <form id="edit-profile-form" method="POST" action="/api/users/update-profile">
+
+          <!-- 닉네임 -->
+          <div class="form-group">
+            <label class="form-label">
+              닉네임<span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              class="form-input"
+              name="nickname"
+              value="<%= user.nickname %>"
+              placeholder="닉네임을 입력하세요"
+              required
+            />
+            <div class="form-hint">2-20자 이내로 입력해주세요.</div>
+          </div>
+
+          <!-- 이메일 -->
+          <div class="form-group">
+            <label class="form-label">
+              이메일<span class="required">*</span>
+            </label>
+            <input
+              type="email"
+              class="form-input"
+              name="email"
+              value="<%= user.email %>"
+              placeholder="email@example.com"
+              required
+            />
+            <div class="form-hint">알림을 받을 이메일 주소입니다.</div>
+          </div>
+
+          <!-- 비밀번호 변경 섹션 -->
+          <div class="password-section">
+            <div class="password-section-title">비밀번호 변경</div>
+
+            <div class="form-group">
+              <label class="form-label">현재 비밀번호</label>
+              <input
+                type="password"
+                class="form-input"
+                name="current_password"
+                placeholder="현재 비밀번호를 입력하세요"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">새 비밀번호</label>
+              <input
+                type="password"
+                class="form-input"
+                name="new_password"
+                placeholder="새 비밀번호를 입력하세요"
+              />
+              <div class="form-hint">8자 이상, 영문/숫자/특수문자 조합</div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">새 비밀번호 확인</label>
+              <input
+                type="password"
+                class="form-input"
+                name="confirm_password"
+                placeholder="새 비밀번호를 다시 입력하세요"
+              />
+            </div>
+          </div>
+
+          <!-- 버튼 -->
+          <div class="button-group">
+            <button type="button" class="btn btn-secondary" onclick="history.back()">
+              취소
+            </button>
+            <button type="submit" class="btn btn-primary">
+              저장하기
+            </button>
+          </div>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // 폼 제출 시 확인만 수행 (유효성 검사는 서버에서)
+    document.getElementById('edit-profile-form').addEventListener('submit', function(e) {
+      // 실제 제출 시 확인 메시지
+      if (!confirm('회원정보를 수정하시겠습니까?')) {
+        e.preventDefault();
+      }
+    });
+  </script>
+</body>
+</html>

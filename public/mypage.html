@@ -124,10 +124,35 @@
       margin-top: 6px;
     }
 
-    .logout-row {
+    .action-row {
       margin-top: 18px;
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .edit-btn {
+      padding: 8px 16px;
+      background: #3498db;
+      color: #ffffff;
+      border: none;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: background 0.15s ease-out, transform 0.08s ease-out;
+    }
+
+    .edit-btn:hover {
+      background: #5dade2;
+      transform: translateY(-1px);
+    }
+
+    .edit-btn:active {
+      transform: translateY(0);
     }
 
     .logout-btn {
@@ -262,9 +287,12 @@
 
         <span class="badge">CTF 미션 수련 중</span>
 
-        <div class="logout-row">
-          <!-- 나중에 JS로 POST /api/logout 호출해도 되고, 일단 버튼만 디자인 -->
-          <form id="logout-form" method="POST" action="/api/logout">
+        <div class="action-row">
+          <!-- 회원 정보 수정 버튼 -->
+          <a href="/edit-profile" class="edit-btn">정보 수정</a>
+          
+          <!-- 로그아웃 버튼 -->
+          <form id="logout-form" method="POST" action="/api/logout" style="margin: 0;">
             <button type="submit" class="logout-btn">로그아웃</button>
           </form>
         </div>
