@@ -111,11 +111,7 @@ app.get('/edit-profile', requireLogin,  async (req, res, next) => {
     const user = await userRepo.findById(userId);
     
     if (!user) {
-      return res.status(404).send(`<script>
-        alert("사용자를 찾을 수 없습니다..");
-        history.back();
-      </script>
-    `);
+      return res.status(404).send('사용자를 찾을 수 없습니다.');
     }
     
     // EJS 템플릿에 데이터 전달
@@ -138,31 +134,19 @@ app.post('/login', async (req, res, next) => {
 
     // 1) 기본 체크
     if (!email || !password) {
-      return res.status(400).send(`<script>
-        alert("이메일과 비밀번호를 입력하세요.");
-        history.back();
-      </script>
-    `);
+      return res.status(400).send('이메일과 비밀번호를 입력하세요.');
     }
 
     // 2) 유저 찾기
     const user = await userRepo.findByEmail(email);
     if (!user) {
-      return res.status(401).send(`<script>
-        alert("존재하지 않는 계정입니다..");
-        history.back();
-      </script>
-    `);
+      return res.status(401).send('존재하지 않는 계정입니다.');
     }
 
     // 3) 비밀번호 확인
     const ok = await userRepo.verifyPassword(user, password);
     if (!ok) {
-      return res.status(401).send(`<script>
-        alert("비밀번호가 올바르지 않습니다.");
-        history.back();
-      </script>
-    `);
+      return res.status(401).send('비밀번호가 올바르지 않습니다.');
     }
 
     // 4) 세션에 유저 정보 저장
@@ -186,11 +170,7 @@ app.post('/api/logout', (req, res) => {
       console.error(err);
       return res
         .status(500)
-        .send(`<script>
-        alert("로그아웃 중 오류가 발생했습니다.");
-        history.back();
-      </script>
-    `);
+        .send('로그아웃 중 오류가 발생했습니다. 다시 시도해주세요.');
     }
 
     // 기본 세션 쿠키 이름이 connect.sid 라면 이렇게 제거
