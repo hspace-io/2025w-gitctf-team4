@@ -1,6 +1,5 @@
-# 1. 의존성 라이브러리 (가장 중요, 이미 잘했어!)
 node_modules/
 
-# 5. 운영체제별 쓰레기 파일 (맥/윈도우)
 .DS_Store
 Thumbs.db
+package-lock.json
