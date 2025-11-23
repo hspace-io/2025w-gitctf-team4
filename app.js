@@ -89,6 +89,19 @@ app.get('/mypage', requireLogin, (req, res) => {
   res.sendFile(paths.HTML.MYPAGE);
 });
 
+// 관리자 페이지 (보호)
+app.get('/admin', requireLogin, (req, res) => {
+  // 관리자만 접근 가능
+  if (req.session.role !== 'knight') {
+    return res.status(403).send(`<script>
+        alert("관리자 권한이 필요합니다.");
+        history.back();
+      </script>
+    `);
+  }
+  res.sendFile(paths.HTML.ADMIN);
+});
+
 //회원정보 수정
 app.get('/edit-profile', requireLogin,  async (req, res, next) => {
    try {
@@ -98,7 +111,11 @@ app.get('/edit-profile', requireLogin,  async (req, res, next) => {
     const user = await userRepo.findById(userId);
     
     if (!user) {
-      return res.status(404).send('사용자를 찾을 수 없습니다.');
+      return res.status(404).send(`<script>
+        alert("사용자를 찾을 수 없습니다..");
+        history.back();
+      </script>
+    `);
     }
     
     // EJS 템플릿에 데이터 전달
@@ -121,19 +138,31 @@ app.post('/login', async (req, res, next) => {
 
     // 1) 기본 체크
     if (!email || !password) {
-      return res.status(400).send('이메일과 비밀번호를 입력하세요.');
+      return res.status(400).send(`<script>
+        alert("이메일과 비밀번호를 입력하세요.");
+        history.back();
+      </script>
+    `);
     }
 
     // 2) 유저 찾기
     const user = await userRepo.findByEmail(email);
     if (!user) {
-      return res.status(401).send('존재하지 않는 계정입니다.');
+      return res.status(401).send(`<script>
+        alert("존재하지 않는 계정입니다..");
+        history.back();
+      </script>
+    `);
     }
 
     // 3) 비밀번호 확인
     const ok = await userRepo.verifyPassword(user, password);
     if (!ok) {
-      return res.status(401).send('비밀번호가 올바르지 않습니다.');
+      return res.status(401).send(`<script>
+        alert("비밀번호가 올바르지 않습니다.");
+        history.back();
+      </script>
+    `);
     }
 
     // 4) 세션에 유저 정보 저장
@@ -157,7 +186,11 @@ app.post('/api/logout', (req, res) => {
       console.error(err);
       return res
         .status(500)
-        .send('로그아웃 중 오류가 발생했습니다. 다시 시도해주세요.');
+        .send(`<script>
+        alert("로그아웃 중 오류가 발생했습니다.");
+        history.back();
+      </script>
+    `);
     }
 
     // 기본 세션 쿠키 이름이 connect.sid 라면 이렇게 제거
