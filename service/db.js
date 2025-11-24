@@ -11,8 +11,8 @@ const DB_PATH = path.join(__dirname, 'data', 'knights.db');
 
 const db = new sqlite3.Database(DB_PATH);
 
-const FLAG_PATH = path.join(__dirname, 'flag.txt'); //Local test
-//const FLAG_PATH = /var/ctf/flag // docker
+//const FLAG_PATH = path.join(__dirname, 'flag.txt'); //Local test
+const FLAG_PATH = "/var/ctf/flag" // docker
 
 // 앱 시작 시 테이블 없으면 만들어주기
 db.serialize(() => {
