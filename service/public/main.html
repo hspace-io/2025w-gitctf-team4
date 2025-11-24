@@ -552,29 +552,35 @@
     }
 
     document.getElementById('submitForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const mid = document.getElementById('submitMissionId').value;
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const mid = document.getElementById('submitMissionId').value;
 
-      try {
-        const res = await fetch(`/api/missions/${mid}/submit`, {
-          method: 'POST',
-          body: formData
-        });
-        const data = await res.json();
-
-        if (res.ok) {
-          alert(data.message || '제출 완료되었습니다.');
-          closeModal('viewModal');
-          loadMissions(currentPage);
-        } else {
-          alert(data.error || '제출 중 오류가 발생했습니다.');
-        }
-      } catch (e2) {
-        console.error(e2);
-        alert('제출 중 오류가 발생했습니다.');
-      }
+    try {
+      const res = await fetch(`/api/missions/${mid}/submit`, {
+      method: 'POST',
+      body: formData
     });
+    
+    const data = await res.json();
+
+    if (res.ok) {
+      alert(data.message || '제출 완료되었습니다.');
+      closeModal('viewModal');
+      loadMissions(currentPage);
+    } else {
+      // 필터링에 걸린 경우 (blocked: true)
+      if (data.blocked) {
+        alert('허용되지 않은 문자입니다.');
+      } else {
+        alert(data.error || '제출 중 오류가 발생했습니다.');
+      }
+    }
+  } catch (e2) {
+    console.error(e2);
+    alert('제출 중 오류가 발생했습니다.');
+  }
+});
 
     async function openJudgeModal() {
       document.getElementById('submissionsList').innerHTML = '로딩 중...';

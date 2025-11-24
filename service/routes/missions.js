@@ -31,6 +31,68 @@ const submitLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+function xssFilter(input) {
+  if (!input || typeof input !== 'string') return input;
+
+  let filtered = input;
+
+  // 우회 패턴을 고려한 강화된 XSS 필터 목록
+  const dangerousPatterns = [
+    /<\s*script.*?>[\s\S]*?<\s*\/\s*script\s*>/gi,
+    /javascript:/gi,
+    /vbscript:/gi,
+    /data:text\/html/gi,
+
+    // 이벤트 핸들러: onload=, onclick= 등 모든 onXXX 차단
+    /\son[a-zA-Z]+\s*=\s*['"]?[^'"]*['"]?/gi,
+
+    // iframe, embed, object 등 삽입형 태그
+    /<\s*iframe[\s\S]*?>/gi,
+    /<\s*embed[\s\S]*?>/gi,
+    /<\s*object[\s\S]*?>/gi,
+    /<\s*link[\s\S]*?>/gi,
+    /<\s*meta[\s\S]*?>/gi,
+
+    // 이미지 기반 XSS 우회 방지
+    /<\s*img[\s\S]*?>/gi,
+
+    // 스타일 기반 XSS
+    /expression\(/gi,
+    /eval\(/gi,
+
+    // SVG 기반 XSS
+    /<\s*svg[\s\S]*?>/gi,
+
+    // HTML 주입 유도
+    /<\s*script/gi,
+    /<\/\s*script\s*>/gi,
+    /<\s*style[\s\S]*?>/gi,
+
+    // 단순 태그 제거 (필요 시 비활성화 가능)
+    /<\s*[^>]*>/gi,
+
+    // 인코딩 기반 우회
+    /&#x?[0-9a-fA-F]+;/gi,
+    /%3C/gi, // <
+    /%3E/gi, // >
+    /%22/gi, // "
+    /%27/gi  // '
+  ];
+
+  dangerousPatterns.forEach(pattern => {
+    filtered = filtered.replace(pattern, '');
+  });
+
+  return filtered;
+}
+
+function containsDangerousContent(input) {
+  if (!input) return false;
+
+  const filtered = xssFilter(input);
+  return input !== filtered;
+}
+
 // 파일 업로드 설정 (크기 제한 추가)
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -179,6 +241,14 @@ router.post('/:id/submit', submitLimiter, (req, res) => {
     const userId = req.session.userId;
     const comment = req.body.comment; 
     const filePath = req.file ? `/uploads/${req.file.filename}` : null;
+
+    // 3. XSS 필터링 검사
+    if (containsDangerousContent(comment)) {
+      return res.status(400).json({ 
+        error: '허용되지 않은 문자입니다.',
+        blocked: true 
+      });
+    }
 
     db.run(
       `INSERT INTO submissions (mission_id, user_id, file_path, submit_comment, status) VALUES (?, ?, ?, ?, 'pending')`,
