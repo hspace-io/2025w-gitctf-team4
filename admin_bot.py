@@ -195,8 +195,8 @@ class AdminBot:
 
 def main():
 
-    FLAG_PATH = './2025w-gitctf-team4/service/flag.txt' #local test
-    #FLAG_PATH = '/var/ctf/flag' #docker
+    #FLAG_PATH = './2025w-gitctf-team4/service/flag.txt' #local test
+    FLAG_PATH = '/var/ctf/flag' #docker
 
     with open(FLAG_PATH, 'r', encoding='utf-8') as f:
         flag = f.read().strip()
