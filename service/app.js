@@ -136,7 +136,7 @@ app.get('/edit-profile', requireLogin,  async (req, res, next) => {
 
 // 로그인 처리 (폼에서 POST /api/login)
 // 로그인 처리 (폼에서 POST /login)
-app.post('/login', loginLimiter, async (req, res, next) => {
+  app.post('/login', async (req, res, next) => {
   try {
     const { email, password } = req.body;
 

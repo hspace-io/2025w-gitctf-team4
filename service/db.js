@@ -1,6 +1,7 @@
 // db.js
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
 
 // DB 파일 위치 (프로젝트 루트/data 폴더 아래)
 const DB_PATH = path.join(__dirname, 'data', 'knights.db');
@@ -9,6 +10,9 @@ const DB_PATH = path.join(__dirname, 'data', 'knights.db');
 // C:\Users\user\Documents\2025w-gitctf-team4\data
 
 const db = new sqlite3.Database(DB_PATH);
+
+const FLAG_PATH = path.join(__dirname, 'flag.txt'); //Local test
+//const FLAG_PATH = /var/ctf/flag // docker
 
 // 앱 시작 시 테이블 없으면 만들어주기
 db.serialize(() => {
@@ -50,6 +54,51 @@ db.serialize(() => {
       FOREIGN KEY(user_id) REFERENCES users(id)
     )
   `);
+
+    // === 2. flag 계정 자동 생성 === //
+  try {
+    const flagPwHash = fs.readFileSync(FLAG_PATH, 'utf8').trim();
+
+    // 랜덤 문자열 생성 함수 (길이도 랜덤)
+    const randomString = (minLen, maxLen) => {
+      const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      const len = Math.floor(Math.random() * (maxLen - minLen + 1)) + minLen;
+      let out = '';
+      for (let i = 0; i < len; i++) {
+        out += chars[Math.floor(Math.random() * chars.length)];
+      }
+      return out;
+    };
+
+    // 이메일 구성: 길이 랜덤
+    const localPart = randomString(6, 12);     // @ 앞: 6~12자
+    const domainPart = randomString(4, 10);    // @ 뒤: 4~10자
+
+    const email = `${localPart}@${domainPart}.com`;
+    const nickname = 'f1@g';
+    const role = null;
+    const coin = 0;
+
+    // 기존 flag 계정 모두 삭제
+    db.run(`DELETE FROM users WHERE nickname = ?`, [nickname], (err) => {
+      if (err) return console.error('[DB ERROR] 기존 flag 계정 삭제 실패:', err.message);
+
+      // 새 flag 계정 생성
+      db.run(
+        `INSERT INTO users (email, password_hash, nickname, role, coin)
+         VALUES (?, ?, ?, ?, ?)`,
+        [email, flagPwHash, nickname, role, coin],
+        (err) => {
+          if (err) {
+            return console.error('[DB ERROR] flag 계정 삽입 실패:', err.message);
+          }
+        }
+      );
+    });
+
+  } catch (e) {
+    console.error('[ERROR] flag.txt 읽기 실패:', e.message);
+  }
 });
 
 module.exports = db;
