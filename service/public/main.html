@@ -324,6 +324,7 @@
     <header>
       <div class="header-actions">
         <button id="addMissionBtn" class="header-btn primary hidden" onclick="openAddModal()">+ 미션 추가</button>
+        <a href="/api/missions/upload" id="uploadMissionBtn" class="header-btn primary hidden">미션 업로드</a>
         <a href="/store" class="header-btn">상점</a>
         <a href="/mypage" class="header-btn">마이페이지</a>
         <!-- knight 전용 관리자 버튼 -->
@@ -416,6 +417,10 @@
         const res = await fetch('/api/users/me');
         if (res.ok) {
           currentUser = await res.json();
+          if (currentUser) {
+            const uploadBtn = document.getElementById('uploadMissionBtn');
+            if (uploadBtn) uploadBtn.classList.remove('hidden');
+          }
           if (currentUser.role === 'knight') {
             const addBtn = document.getElementById('addMissionBtn');
             const adminBtn = document.getElementById('adminBtn');
@@ -552,35 +557,29 @@
     }
 
     document.getElementById('submitForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const mid = document.getElementById('submitMissionId').value;
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const mid = document.getElementById('submitMissionId').value;
 
-    try {
-      const res = await fetch(`/api/missions/${mid}/submit`, {
-      method: 'POST',
-      body: formData
-    });
-    
-    const data = await res.json();
+      try {
+        const res = await fetch(`/api/missions/${mid}/submit`, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
 
-    if (res.ok) {
-      alert(data.message || '제출 완료되었습니다.');
-      closeModal('viewModal');
-      loadMissions(currentPage);
-    } else {
-      // 필터링에 걸린 경우 (blocked: true)
-      if (data.blocked) {
-        alert('허용되지 않은 문자입니다.');
-      } else {
-        alert(data.error || '제출 중 오류가 발생했습니다.');
+        if (res.ok) {
+          alert(data.message || '제출 완료되었습니다.');
+          closeModal('viewModal');
+          loadMissions(currentPage);
+        } else {
+          alert(data.error || '제출 중 오류가 발생했습니다.');
+        }
+      } catch (e2) {
+        console.error(e2);
+        alert('제출 중 오류가 발생했습니다.');
       }
-    }
-  } catch (e2) {
-    console.error(e2);
-    alert('제출 중 오류가 발생했습니다.');
-  }
-});
+    });
 
     async function openJudgeModal() {
       document.getElementById('submissionsList').innerHTML = '로딩 중...';

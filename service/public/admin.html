@@ -427,28 +427,25 @@
     }
 
     async function deleteAllMissions() {
-      if (!confirm('정말로 모든 제출 내역을 삭제하시겠습니까?\n(미션 자체는 유지됩니다)')) {
-        return;
-      }
-
-      try {
-        const res = await fetch('/api/missions', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' }
-      });
+        try {
+            const res = await fetch('/api/missions', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        });
 
         const data = await res.json();
 
         if (res.ok) {
-          alert(`제출 내역 전체 삭제 완료!\n삭제된 제출 수: ${data.deletedSubmissions ?? 0}개`);
-          await loadMissions();
-          await loadAllSubmissions();
+            alert(`삭제 완료!\n미션: ${data.deletedMissions}개\n제출 내역: ${data.deletedSubmissions}개`);
+            await loadMissions();
+            await loadAllSubmissions();
         } else {
-          alert('삭제 실패: ' + (data.error || '알 수 없는 오류'));
+            alert('삭제 실패: ' + (data.error || '알 수 없는 오류'));
         }
-      } catch (err) {
-        alert('오류가 발생했습니다: ' + err.message);
-      }
+  
+        } catch (err) {
+            alert('오류가 발생했습니다: ' + err.message);
+        }
     }
   </script>
 </body>
