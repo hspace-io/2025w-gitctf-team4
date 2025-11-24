@@ -2,11 +2,9 @@ FROM node:22
 
 WORKDIR /app
 
-COPY service/package*.json ./
+COPY package*.json .
 
 RUN npm install --omit=dev
-
-COPY service/. .
 
 EXPOSE 5000
 
