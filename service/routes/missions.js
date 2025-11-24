@@ -3,6 +3,8 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const rateLimit = require('express-rate-limit');
+const { exec } = require('child_process'); 
+const fs = require('fs'); 
 const db = require('../db');
 const userRepo = require('../models/userRepo');
 
@@ -22,94 +24,91 @@ function requireAdmin(req, res, next) {
 }
 
 // DoS 방어: 제출 속도 제한
-// 한 IP당 1분 동안 5번만 제출 가능하도록 제한 설정
 const submitLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1분
-  max: 5, // 최대 5번 허용
+  windowMs: 1 * 60 * 1000,
+  max: 5,
   message: { error: '제출 횟수가 너무 많습니다. 1분 뒤에 다시 시도해주세요.' }, 
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-function xssFilter(input) {
-  if (!input || typeof input !== 'string') return input;
-
-  let filtered = input;
-
-  // 우회 패턴을 고려한 강화된 XSS 필터 목록
-  const dangerousPatterns = [
-    /<\s*script.*?>[\s\S]*?<\s*\/\s*script\s*>/gi,
-    /javascript:/gi,
-    /vbscript:/gi,
-    /data:text\/html/gi,
-
-    // 이벤트 핸들러: onload=, onclick= 등 모든 onXXX 차단
-    /\son[a-zA-Z]+\s*=\s*['"]?[^'"]*['"]?/gi,
-
-    // iframe, embed, object 등 삽입형 태그
-    /<\s*iframe[\s\S]*?>/gi,
-    /<\s*embed[\s\S]*?>/gi,
-    /<\s*object[\s\S]*?>/gi,
-    /<\s*link[\s\S]*?>/gi,
-    /<\s*meta[\s\S]*?>/gi,
-
-    // 이미지 기반 XSS 우회 방지
-    /<\s*img[\s\S]*?>/gi,
-
-    // 스타일 기반 XSS
-    /expression\(/gi,
-    /eval\(/gi,
-
-    // SVG 기반 XSS
-    /<\s*svg[\s\S]*?>/gi,
-
-    // HTML 주입 유도
-    /<\s*script/gi,
-    /<\/\s*script\s*>/gi,
-    /<\s*style[\s\S]*?>/gi,
-
-    // 단순 태그 제거 (필요 시 비활성화 가능)
-    /<\s*[^>]*>/gi,
-
-    // 인코딩 기반 우회
-    /&#x?[0-9a-fA-F]+;/gi,
-    /%3C/gi, // <
-    /%3E/gi, // >
-    /%22/gi, // "
-    /%27/gi  // '
-  ];
-
-  dangerousPatterns.forEach(pattern => {
-    filtered = filtered.replace(pattern, '');
-  });
-
-  return filtered;
-}
-
-function containsDangerousContent(input) {
-  if (!input) return false;
-
-  const filtered = xssFilter(input);
-  return input !== filtered;
-}
-
-// 파일 업로드 설정 (크기 제한 추가)
+// 파일 업로드 설정 (취약한 확장자 검증 추가)
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'public/uploads/');
   },
   filename: function (req, file, cb) {
     file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8');
-    // 파일명에 랜덤값 추가
     const uniqueName = Date.now() + '_' + file.originalname;
     cb(null, uniqueName);
   },
 });
 
+
+const fileFilter = (req, file, cb) => {
+  const ext = path.extname(file.originalname).toLowerCase();
+
+  const allowedExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+  if (allowedExts.includes(ext)) {
+    cb(null, true);
+  } else {
+    cb(new Error('이미지 파일만 업로드 가능합니다.'), false);
+  }
+};
+
 const upload = multer({ 
   storage: storage,
-  // 파일 크기 제한: 5MB (5 * 1024 * 1024 byte)
+  fileFilter: fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 } 
+});
+
+
+router.get('/upload', (req, res) => {
+  if (!req.session || !req.session.userId) {
+    return res.status(401).send('로그인이 필요합니다.');
+  }
+
+  return res.render('mission-upload');
+});
+
+// 업로드 처리
+router.post('/upload', upload.single('missionImage'), (req, res) => {
+  if (!req.session || !req.session.userId) {
+    return res.status(401).json({ error: '로그인 필요' });
+  }
+
+  const { title, shortDesc, detailDesc, coins } = req.body;
+  const imgUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
+  db.run(
+    `INSERT INTO missions (title, img_url, short_desc, detail_desc, coins_reward, created_by)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [title, imgUrl, shortDesc, detailDesc, coins, req.session.userId],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      return res.redirect('/main');
+    }
+  );
+});
+
+router.get('/preview/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const filePath = path.join(__dirname, '../public/uploads', filename);
+  
+  // 파일 존재 확인
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).send('파일을 찾을 수 없습니다.');
+  }
+  
+  exec(`php ${filePath}`, (error, stdout, stderr) => {
+    if (error) {
+      return res.status(500).send(`실행 오류: ${error.message}`);
+    }
+    if (stderr) {
+      return res.status(500).send(`PHP 오류: ${stderr}`);
+    }
+    res.send(stdout);
+  });
 });
 
 // 미션 목록 조회 (유저별 제출 여부/상태 포함)
@@ -119,7 +118,6 @@ router.get('/', (req, res) => {
   const offset = (page - 1) * limit;
   const userId = req.session?.userId || null;
 
-  // 로그인 안 한 경우: 기본 미션 목록 + 제출정보 기본값
   if (!userId) {
     const sql = `SELECT * FROM missions ORDER BY id DESC LIMIT ? OFFSET ?`;
     db.all(sql, [limit, offset], (err, rows) => {
@@ -132,7 +130,6 @@ router.get('/', (req, res) => {
       res.json(enriched);
     });
   } else {
-    // 로그인 한 경우: 이 유저의 최근 제출 상태까지 포함
     const sql = `
       SELECT 
         m.*,
@@ -158,7 +155,7 @@ router.get('/', (req, res) => {
   }
 });
 
-// 미션 상세 조회 (유저별 제출 여부/상태 포함)
+// 미션 상세 조회
 router.get('/:id', (req, res) => {
   const missionId = req.params.id;
   const userId = req.session?.userId || null;
@@ -218,21 +215,16 @@ router.post('/', upload.single('missionImage'), (req, res) => {
 });
 
 // 과제 제출 기능
-// upload.single() 앞에 submitLimiter를 넣어서, 파일 업로드 전에 횟수부터 검사함!
 router.post('/:id/submit', submitLimiter, (req, res) => {
-  // Multer 에러 핸들링을 위해 래핑 함수 사용
-  // (파일 크기가 5MB 넘으면 여기서 에러가 잡힘)
   const uploadMiddleware = upload.single('file');
 
   uploadMiddleware(req, res, (err) => {
-    // 1. 파일 크기 초과 에러 처리
     if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({ error: '파일 크기가 너무 큽니다. (최대 5MB)' });
     } else if (err) {
       return res.status(500).json({ error: '업로드 중 에러 발생: ' + err.message });
     }
 
-    // 2. 로그인 체크
     if (!req.session || !req.session.userId) {
       return res.status(401).json({ error: '로그인 필요' });
     }
@@ -242,20 +234,11 @@ router.post('/:id/submit', submitLimiter, (req, res) => {
     const comment = req.body.comment; 
     const filePath = req.file ? `/uploads/${req.file.filename}` : null;
 
-    // 3. XSS 필터링 검사
-    if (containsDangerousContent(comment)) {
-      return res.status(400).json({ 
-        error: '허용되지 않은 문자입니다.',
-        blocked: true 
-      });
-    }
-
     db.run(
       `INSERT INTO submissions (mission_id, user_id, file_path, submit_comment, status) VALUES (?, ?, ?, ?, 'pending')`,
       [missionId, userId, filePath, comment],
       function(dbErr) {
         if (dbErr) return res.status(500).json({ error: dbErr.message });
-        // 프론트에서 버튼/상태를 바꾸기 쉽도록 정보 같이 전달
         res.json({ 
           status: 'ok', 
           message: '제출되었습니다. 기사님의 평가를 기다리세요.',
@@ -330,7 +313,6 @@ router.post('/submissions/judge', async (req, res) => {
 
 // 전체 제출 내역 조회 (관리자 전용)
 router.get('/submissions/all', (req, res) => {
-  // 관리자 권한 체크
   if (req.session.role !== 'knight') {
     return res.status(403).json({ error: '권한 없음' });
   }
@@ -362,19 +344,29 @@ router.delete('/', requireAdmin, (req, res) => {
   db.serialize(() => {
     db.run('BEGIN TRANSACTION');
 
-    db.run('DELETE FROM submissions', function (err) {
+    db.run('DELETE FROM submissions', function(err) {
       if (err) {
         db.run('ROLLBACK');
         return res.status(500).json({ error: err.message });
       }
 
-      const deletedSubmissions = this.changes || 0;
+      const deletedSubmissions = this.changes;
 
-      db.run('COMMIT');
-      return res.json({
-        status: 'ok',
-        message: '모든 제출 내역이 삭제되었습니다. (미션 자체는 유지됩니다.)',
-        deletedSubmissions,
+      db.run('DELETE FROM missions', function(err) {
+        if (err) {
+          db.run('ROLLBACK');
+          return res.status(500).json({ error: err.message });
+        }
+
+        const deletedMissions = this.changes;
+
+        db.run('COMMIT');
+        res.json({ 
+          status: 'ok', 
+          message: '모든 미션이 삭제되었습니다.',
+          deletedMissions,
+          deletedSubmissions
+        });
       });
     });
   });
