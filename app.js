@@ -1,6 +1,7 @@
 // app.js
 const express = require('express');
 const session = require('express-session');
+const rateLimit = require('express-rate-limit');
 const paths = require('./paths');
 const config = require('./config/config');
 
@@ -44,6 +45,13 @@ function requireLogin(req, res, next) {
   }
   next();
 }
+
+const loginLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,         // 10분 단위
+  max: 10,                          // 10회 실패 시 차단
+  message: '로그인 시도가 너무 많습니다. 잠시 후 다시 시도하세요.',
+  skipSuccessfulRequests: true      // 로그인 성공 시 카운트 리셋
+});
 
 /**
  * 페이지 라우트
@@ -128,7 +136,7 @@ app.get('/edit-profile', requireLogin,  async (req, res, next) => {
 
 // 로그인 처리 (폼에서 POST /api/login)
 // 로그인 처리 (폼에서 POST /login)
-app.post('/login', async (req, res, next) => {
+app.post('/login', loginLimiter, async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
