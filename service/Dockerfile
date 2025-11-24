@@ -1,11 +1,16 @@
-FROM node:18
+
+FROM node:22
+
 
 WORKDIR /app
 
 COPY package*.json .
 
-RUN npm install
+RUN npm install --omit=dev
 
 EXPOSE 5000
 
-CMD ["node", "server.js"]
+CMD ["npm", "start"]
+
+RUN mkdir -p /var/ctf
+COPY flag /var/ctf/
