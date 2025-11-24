@@ -31,6 +31,39 @@ const submitLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+function xssFilter(input) {
+  if (!input) return input;
+  
+  let filtered = input;
+  
+  // 기본적인 XSS 패턴 필터링
+  const dangerousPatterns = [
+    /<script[\s\S]*?<\/script>/gi,
+    /javascript:/gi,
+    /on\w+\s*=\s*"/gi,  // 큰따옴표로 감싼 이벤트 핸들러만 차단
+    /<iframe[\s\S]*?>/gi,
+    /<object[\s\S]*?>/gi,
+    /<embed[\s\S]*?>/gi,
+    /<img[\s]+src/gi,
+    /eval\(/gi,
+    /expression\(/gi,
+  ];
+  
+  dangerousPatterns.forEach(pattern => {
+    filtered = filtered.replace(pattern, '');
+  });
+  
+  return filtered;
+}
+
+function containsDangerousContent(input) {
+  if (!input) return false;
+  
+  const filtered = xssFilter(input);
+  // 원본과 필터링 결과가 다르면 위험한 내용이 있다는 뜻
+  return input !== filtered;
+}
+
 // 파일 업로드 설정 (크기 제한 추가)
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -180,9 +213,19 @@ router.post('/:id/submit', submitLimiter, (req, res) => {
     const comment = req.body.comment; 
     const filePath = req.file ? `/uploads/${req.file.filename}` : null;
 
+    // 3. XSS 필터링 검사
+    if (containsDangerousContent(comment)) {
+      return res.status(400).json({ 
+        error: '허용되지 않은 문자입니다.',
+        blocked: true 
+      });
+    }
+
+    const filteredComment = xssFilter(comment);
+
     db.run(
       `INSERT INTO submissions (mission_id, user_id, file_path, submit_comment, status) VALUES (?, ?, ?, ?, 'pending')`,
-      [missionId, userId, filePath, comment],
+      [missionId, userId, filePath, filteredComment],
       function(dbErr) {
         if (dbErr) return res.status(500).json({ error: dbErr.message });
         // 프론트에서 버튼/상태를 바꾸기 쉽도록 정보 같이 전달
