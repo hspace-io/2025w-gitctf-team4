@@ -292,31 +292,19 @@ router.delete('/', requireAdmin, (req, res) => {
   db.serialize(() => {
     db.run('BEGIN TRANSACTION');
 
-    // 1. 모든 제출 내역 삭제
-    db.run('DELETE FROM submissions', function(err) {
+    db.run('DELETE FROM submissions', function (err) {
       if (err) {
         db.run('ROLLBACK');
         return res.status(500).json({ error: err.message });
       }
 
-      const deletedSubmissions = this.changes;
+      const deletedSubmissions = this.changes || 0;
 
-      // 2. 모든 미션 삭제
-      db.run('DELETE FROM missions', function(err) {
-        if (err) {
-          db.run('ROLLBACK');
-          return res.status(500).json({ error: err.message });
-        }
-
-        const deletedMissions = this.changes;
-
-        db.run('COMMIT');
-        res.json({ 
-          status: 'ok', 
-          message: '모든 미션이 삭제되었습니다.',
-          deletedMissions,
-          deletedSubmissions
-        });
+      db.run('COMMIT');
+      return res.json({
+        status: 'ok',
+        message: '모든 제출 내역이 삭제되었습니다. (미션 자체는 유지됩니다.)',
+        deletedSubmissions,
       });
     });
   });
