@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>Knights Frontier – 관리자 페이지</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body { 
+      min-height: 100vh; 
+      background: #040818; 
+      color: #f5f5f5; 
+      font-family: -apple-system, sans-serif; 
+      display: flex; 
+      justify-content: center; 
+    }
+
+    .page { 
+      width: 100%; 
+      max-width: 1400px; 
+      padding: 32px 24px 40px; 
+    }
+
+    header { 
+      display: flex; 
+      justify-content: space-between;
+      align-items: center; 
+      margin-bottom: 32px; 
+    }
+
+    .header-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #8fa3ff;
+    }
+
+    .header-actions { 
+      display: flex; 
+      gap: 10px; 
+    }
+
+    .header-btn { 
+      padding: 6px 14px; 
+      border-radius: 999px; 
+      font-size: 13px; 
+      font-weight: 600; 
+      border: 1px solid #8fa3ff; 
+      background: transparent; 
+      color: #e2e7ff; 
+      cursor: pointer; 
+      text-decoration: none; 
+    }
+
+    .header-btn:hover { 
+      background: rgba(143, 163, 255, 0.22); 
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: #dde5f5;
+      color: #1a2438;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 32px;
+      font-weight: 700;
+      color: #4a6bff;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #555;
+      margin-top: 8px;
+    }
+
+    .filters {
+      background: #dde5f5;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .filter-select {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #bcc7e3;
+      background: #f5f7ff;
+      color: #1a2438;
+      font-size: 14px;
+    }
+
+    .submissions-table {
+      background: #dde5f5;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead {
+      background: #4a6bff;
+      color: white;
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #bcc7e3;
+    }
+
+    th {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    td {
+      color: #1a2438;
+      font-size: 13px;
+    }
+
+    tbody tr:hover {
+      background: rgba(74, 107, 255, 0.1);
+    }
+
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-pending { background: #f1c40f; color: #fff; }
+    .status-success { background: #27ae60; color: #fff; }
+    .status-fail { background: #e74c3c; color: #fff; }
+
+    .action-btn {
+      padding: 4px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      margin-right: 4px;
+    }
+
+    .btn-approve { background: #27ae60; color: white; }
+    .btn-reject { background: #e74c3c; color: white; }
+    .btn-view { background: #3498db; color: white; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1 class="header-title">🛡️ 관리자 대시보드</h1>
+      <div class="header-actions">
+        <a href="/main" class="header-btn">미션 대시보드</a>
+        <a href="/mypage" class="header-btn">마이페이지</a>
+        <button class="header-btn" style="border-color: #e74c3c; color: #ffb3b3;" onclick="deleteAllMissions()">
+            모든 미션 삭제
+        </button>
+      </div>
+    </header>
+
+    <!-- 통계 카드 -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number" id="stat-total">0</div>
+        <div class="stat-label">총 제출 건수</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-pending">0</div>
+        <div class="stat-label">검토 대기</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-success">0</div>
+        <div class="stat-label">승인됨</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-fail">0</div>
+        <div class="stat-label">거부됨</div>
+      </div>
+    </div>
+
+    <!-- 필터 -->
+    <div class="filters">
+      <select class="filter-select" id="filter-status">
+        <option value="all">전체 상태</option>
+        <option value="pending">검토 대기</option>
+        <option value="success">승인됨</option>
+        <option value="fail">거부됨</option>
+      </select>
+
+      <select class="filter-select" id="filter-mission">
+        <option value="all">전체 미션</option>
+      </select>
+
+      <input 
+        type="text" 
+        class="filter-select" 
+        id="filter-user" 
+        placeholder="사용자 검색 (이메일 또는 닉네임)"
+      />
+    </div>
+
+    <!-- 제출 내역 테이블 -->
+    <div class="submissions-table">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>미션</th>
+            <th>제출자</th>
+            <th>이메일</th>
+            <th>제출 내용</th>
+            <th>파일</th>
+            <th>상태</th>
+            <th>제출일</th>
+            <th>작업</th>
+          </tr>
+        </thead>
+        <tbody id="submissions-tbody">
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 40px;">
+              로딩 중...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let allSubmissions = [];
+    let missions = [];
+
+    // 페이지 로드 시 실행
+    window.addEventListener('DOMContentLoaded', async () => {
+      await checkAdminAccess();
+      await loadMissions();
+      await loadAllSubmissions();
+    });
+
+    // 관리자 권한 체크
+    async function checkAdminAccess() {
+      try {
+        const res = await fetch('/api/users/me');
+        if (!res.ok) {
+          alert('로그인이 필요합니다.');
+          window.location.href = '/login';
+          return;
+        }
+        
+        const user = await res.json();
+        if (user.role !== 'knight') {
+          alert('관리자 권한이 필요합니다.');
+          window.location.href = '/main';
+        }
+      } catch (err) {
+        console.error(err);
+        alert('오류가 발생했습니다.');
+        window.location.href = '/login';
+      }
+    }
+
+    // 미션 목록 로드
+    async function loadMissions() {
+      try {
+        const res = await fetch('/api/missions?page=1&limit=1000');
+        missions = await res.json();
+        
+        const select = document.getElementById('filter-mission');
+        missions.forEach(m => {
+          const option = document.createElement('option');
+          option.value = m.id;
+          option.textContent = m.title;
+          select.appendChild(option);
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // 전체 제출 내역 로드
+    async function loadAllSubmissions() {
+      try {
+        const res = await fetch('/api/missions/submissions/all');
+        if (!res.ok) throw new Error('제출 내역 로드 실패');
+        
+        allSubmissions = await res.json();
+        updateStats();
+        renderSubmissions(allSubmissions);
+      } catch (err) {
+        console.error(err);
+        document.getElementById('submissions-tbody').innerHTML = `
+          <tr><td colspan="9" style="text-align: center; color: #e74c3c;">
+            오류가 발생했습니다: ${err.message}
+          </td></tr>
+        `;
+      }
+    }
+
+    // 통계 업데이트
+    function updateStats() {
+      document.getElementById('stat-total').textContent = allSubmissions.length;
+      document.getElementById('stat-pending').textContent = 
+        allSubmissions.filter(s => s.status === 'pending').length;
+      document.getElementById('stat-success').textContent = 
+        allSubmissions.filter(s => s.status === 'success').length;
+      document.getElementById('stat-fail').textContent = 
+        allSubmissions.filter(s => s.status === 'fail').length;
+    }
+
+    // 제출 내역 렌더링
+    function renderSubmissions(submissions) {
+      const tbody = document.getElementById('submissions-tbody');
+      
+      if (submissions.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="9" style="text-align: center; padding: 40px; color: #555;">
+            제출 내역이 없습니다.
+          </td></tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = submissions.map(sub => {
+        const mission = missions.find(m => m.id === sub.mission_id);
+        const missionTitle = mission ? mission.title : `미션 #${sub.mission_id}`;
+        
+        const fileHtml = sub.file_path 
+          ? `<a href="${sub.file_path}" target="_blank" style="color:#3498db;">다운로드</a>`
+          : '<span style="color:#999;">없음</span>';
+
+        const actionHtml = sub.status === 'pending' 
+          ? `
+            <button class="action-btn btn-approve" onclick="judge(${sub.id}, 'success', ${sub.mission_id})">승인</button>
+            <button class="action-btn btn-reject" onclick="judge(${sub.id}, 'fail', ${sub.mission_id})">거부</button>
+          `
+          : '<span style="color:#999;">처리완료</span>';
+
+        const date = new Date(sub.created_at).toLocaleString('ko-KR');
+
+        return `
+          <tr>
+            <td>${sub.id}</td>
+            <td>${missionTitle}</td>
+            <td><b>${sub.nickname}</b></td>
+            <td>${sub.email}</td>
+            <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              ${sub.submit_comment || '-'}
+            </td>
+            <td>${fileHtml}</td>
+            <td><span class="status-badge status-${sub.status}">${sub.status}</span></td>
+            <td>${date}</td>
+            <td>${actionHtml}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // 채점 처리
+    async function judge(subId, result, missionId) {
+      if (!confirm(result === 'success' ? '승인하시겠습니까?' : '거부하시겠습니까?')) return;
+
+      try {
+        const res = await fetch('/api/missions/submissions/judge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ submissionId: subId, result, missionId })
+        });
+
+        if (res.ok) {
+          alert('처리되었습니다.');
+          await loadAllSubmissions();
+        } else {
+          alert('처리 중 오류가 발생했습니다.');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('오류가 발생했습니다.');
+      }
+    }
+
+    // 필터 이벤트
+    document.getElementById('filter-status').addEventListener('change', applyFilters);
+    document.getElementById('filter-mission').addEventListener('change', applyFilters);
+    document.getElementById('filter-user').addEventListener('input', applyFilters);
+
+    function applyFilters() {
+      const status = document.getElementById('filter-status').value;
+      const mission = document.getElementById('filter-mission').value;
+      const user = document.getElementById('filter-user').value.toLowerCase();
+
+      let filtered = allSubmissions;
+
+      if (status !== 'all') {
+        filtered = filtered.filter(s => s.status === status);
+      }
+
+      if (mission !== 'all') {
+        filtered = filtered.filter(s => s.mission_id === parseInt(mission));
+      }
+
+      if (user) {
+        filtered = filtered.filter(s => 
+          s.nickname.toLowerCase().includes(user) || 
+          s.email.toLowerCase().includes(user)
+        );
+      }
+
+      renderSubmissions(filtered);
+    }
+
+    async function deleteAllMissions() {
+        try {
+            const res = await fetch('/api/missions', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            alert(`삭제 완료!\n미션: ${data.deletedMissions}개\n제출 내역: ${data.deletedSubmissions}개`);
+            await loadMissions();
+            await loadAllSubmissions();
+        } else {
+            alert('삭제 실패: ' + (data.error || '알 수 없는 오류'));
+        }
+  
+        } catch (err) {
+            alert('오류가 발생했습니다: ' + err.message);
+        }
+    }
+  </script>
+</body>
+</html>

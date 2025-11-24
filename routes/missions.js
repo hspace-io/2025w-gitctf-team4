@@ -8,6 +8,19 @@ const userRepo = require('../models/userRepo');
 
 const router = express.Router();
 
+// 관리자 권한 체크
+function requireAdmin(req, res, next) {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: '로그인이 필요합니다.' });
+  }
+  
+  if (req.session.role !== 'knight') {
+    return res.status(403).json({ error: '관리자 권한이 필요합니다.' });
+  }
+  
+  next();
+}
+
 // DoS 방어: 제출 속도 제한
 // 한 IP당 1분 동안 5번만 제출 가능하도록 제한 설정
 const submitLimiter = rateLimit({
@@ -157,6 +170,70 @@ router.post('/submissions/judge', async (req, res) => {
     console.error(e);
     res.status(500).json({ error: '채점 중 오류 발생' });
   }
+});
+
+// 전체 제출 내역 조회 (관리자 전용)
+router.get('/submissions/all', (req, res) => {
+  // 관리자 권한 체크
+  if (req.session.role !== 'knight') {
+    return res.status(403).json({ error: '권한 없음' });
+  }
+
+  const sql = `
+    SELECT 
+      s.id,
+      s.mission_id,
+      s.user_id,
+      s.file_path,
+      s.submit_comment,
+      s.status,
+      s.created_at,
+      u.nickname,
+      u.email
+    FROM submissions s
+    JOIN users u ON s.user_id = u.id
+    ORDER BY s.created_at DESC
+  `;
+
+  db.all(sql, [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+// 모든 미션 삭제 (관리자 전용)
+router.delete('/', requireAdmin, (req, res) => {
+  db.serialize(() => {
+    db.run('BEGIN TRANSACTION');
+
+    // 1. 모든 제출 내역 삭제
+    db.run('DELETE FROM submissions', function(err) {
+      if (err) {
+        db.run('ROLLBACK');
+        return res.status(500).json({ error: err.message });
+      }
+
+      const deletedSubmissions = this.changes;
+
+      // 2. 모든 미션 삭제
+      db.run('DELETE FROM missions', function(err) {
+        if (err) {
+          db.run('ROLLBACK');
+          return res.status(500).json({ error: err.message });
+        }
+
+        const deletedMissions = this.changes;
+
+        db.run('COMMIT');
+        res.json({ 
+          status: 'ok', 
+          message: '모든 미션이 삭제되었습니다.',
+          deletedMissions,
+          deletedSubmissions
+        });
+      });
+    });
+  });
 });
 
 module.exports = router;

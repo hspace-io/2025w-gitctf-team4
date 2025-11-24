@@ -89,6 +89,19 @@ app.get('/mypage', requireLogin, (req, res) => {
   res.sendFile(paths.HTML.MYPAGE);
 });
 
+// 관리자 페이지 (보호)
+app.get('/admin', requireLogin, (req, res) => {
+  // 관리자만 접근 가능
+  if (req.session.role !== 'knight') {
+    return res.status(403).send(`<script>
+        alert("관리자 권한이 필요합니다.");
+        history.back();
+      </script>
+    `);
+  }
+  res.sendFile(paths.HTML.ADMIN);
+});
+
 //회원정보 수정
 app.get('/edit-profile', requireLogin,  async (req, res, next) => {
    try {
