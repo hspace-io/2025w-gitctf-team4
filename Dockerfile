@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY service/package*.json ./
 
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 COPY service/. .
 
