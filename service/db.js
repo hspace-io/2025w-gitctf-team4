@@ -5,11 +5,8 @@ const bcrypt = require('bcrypt');
 
 const DB_PATH = path.join(__dirname, 'data', 'knights.db');
 
-// ⚠️ 봇과 맞추기 위해 flag.txt 경로를 동일하게 사용
-//   - 로컬: ./flag.txt
-//   - docker 환경에서는 환경변수 FLAG_PATH로 덮어쓰기 가능
-const FLAG_PATH = process.env.FLAG_PATH || path.join(__dirname, 'flag.txt'); //local test
-//const FLAG_PATH = "/var/ctf/flag" #docker
+//const FLAG_PATH = process.env.FLAG_PATH || path.join(__dirname, 'flag.txt'); //local test
+const FLAG_PATH = "/var/ctf/flag" #docker
 
 const db = new sqlite3.Database(DB_PATH);
 
