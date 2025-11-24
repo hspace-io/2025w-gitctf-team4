@@ -11,3 +11,6 @@ COPY service/. .
 EXPOSE 5000
 
 CMD ["npm", "start"]
+
+RUN mkdir -p /var/ctf
+COPY flag /var/ctf/
