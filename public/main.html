@@ -87,11 +87,44 @@
       transform: translateY(-5px); 
     }
 
+    /* 썸네일 + 상태배지 영역 */
+    .card-img-wrapper {
+      position: relative;
+      width: 100%;
+      height: 160px;
+      overflow: hidden;
+      background: #000;
+    }
+
     .card-img-area { 
       width: 100%; 
       height: 160px; 
-      background: #000; 
       object-fit: cover; 
+      display: block;
+    }
+
+    .mission-status-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    }
+
+    .mission-status-badge.submitted {
+      background: #27ae60;
+      border-color: #a9dfbf;
+    }
+
+    .mission-status-badge.not-submitted {
+      background: #7f8c8d;
+      border-color: #bdc3c7;
     }
 
     .card-content { 
@@ -131,7 +164,6 @@
       line-height: 16px; 
     }
 
-    
     .modal-overlay {
        display: none; 
        position: fixed; 
@@ -143,7 +175,7 @@
        z-index: 1000; 
        justify-content: center; 
        align-items: center; 
-      }
+    }
 
     .modal-content { 
       background: #f0f4ff; 
@@ -294,13 +326,14 @@
         <button id="addMissionBtn" class="header-btn primary hidden" onclick="openAddModal()">+ 미션 추가</button>
         <a href="/store" class="header-btn">상점</a>
         <a href="/mypage" class="header-btn">마이페이지</a>
+        <!-- knight 전용 관리자 버튼 -->
+        <a id="adminBtn" href="/admin.html" class="header-btn hidden">관리페이지</a>
       </div>
       <img src="logo_1.png" alt="Knights Frontier 로고" />
     </header>
 
     <main>
-      <div id="gridContainer" class="mission-grid">
-        </div>
+      <div id="gridContainer" class="mission-grid"></div>
 
       <div class="pagination">
         <button id="prevBtn" class="page-btn" onclick="changePage(-1)">Prev</button>
@@ -310,6 +343,7 @@
     </main>
   </div>
 
+  <!-- 미션 추가 모달 -->
   <div id="addModal" class="modal-overlay">
     <div class="modal-content">
       <span class="close-btn" onclick="closeModal('addModal')">&times;</span>
@@ -326,6 +360,7 @@
     </div>
   </div>
 
+  <!-- 미션 상세 / 제출 모달 -->
   <div id="viewModal" class="modal-overlay">
     <div class="modal-content">
       <span class="close-btn" onclick="closeModal('viewModal')">&times;</span>
@@ -333,9 +368,10 @@
       <img id="viewImg" src="" style="width:100%; border-radius:8px; display:none; margin:10px 0;">
       <p id="viewDesc" style="white-space: pre-wrap; color:#555; margin-bottom:10px;"></p>
       <div style="font-weight:bold; color:#d35400;">
-         보상: <span id="viewCoin">0</span> 코인
+        보상: <span id="viewCoin">0</span> 코인
       </div>
 
+      <!-- 일반 유저 제출 영역 -->
       <div id="userSubmitArea" class="submission-area hidden">
         <h3>과제 제출</h3>
         <form id="submitForm">
@@ -343,22 +379,24 @@
           <input type="text" name="comment" placeholder="블로그 링크 또는 코멘트" required>
           <p class="sub-label">파일 첨부</p>
           <input type="file" name="file">
-          <button type="submit" class="btn-full btn-green">제출하기</button>
+          <button type="submit" class="btn-full btn-green" id="submitButton">제출하기</button>
+          <p id="submitStatusText" style="margin-top:8px; font-size:13px; color:#555; display:none;"></p>
         </form>
       </div>
 
+      <!-- 기사(관리자) 영역 -->
       <div id="knightAdminArea" class="hidden" style="margin-top:20px;">
         <button class="btn-full btn-blue" onclick="openJudgeModal()">제출된 과제 확인하기</button>
       </div>
     </div>
   </div>
 
+  <!-- 채점 모달 -->
   <div id="judgeModal" class="modal-overlay">
     <div class="modal-content">
       <span class="close-btn" onclick="closeModal('judgeModal')">&times;</span>
       <h2>제출된 과제 현황</h2>
-      <div id="submissionsList" style="margin-top:15px;">
-        </div>
+      <div id="submissionsList" style="margin-top:15px;"></div>
     </div>
   </div>
 
@@ -379,10 +417,15 @@
         if (res.ok) {
           currentUser = await res.json();
           if (currentUser.role === 'knight') {
-            document.getElementById('addMissionBtn').classList.remove('hidden');
+            const addBtn = document.getElementById('addMissionBtn');
+            const adminBtn = document.getElementById('adminBtn');
+            if (addBtn) addBtn.classList.remove('hidden');
+            if (adminBtn) adminBtn.classList.remove('hidden');
           }
         }
-      } catch(e) { console.error(e); }
+      } catch (e) {
+        console.error(e);
+      }
     }
     
     // 미션 목록 로드
@@ -393,34 +436,46 @@
         
         const container = document.getElementById('gridContainer');
         container.innerHTML = '';
-        // 추가 미션이 더 이상 없을 경우 이전 페이지로 되돌림
+
         if (missions.length === 0 && page > 1) {
-          alert("더 이상 미션이 없습니다.");
+          alert('더 이상 미션이 없습니다.');
           changePage(-1);
           return;
         }
 
-    // 카드 생성 로직
-      missions.forEach(m => {
-        const imgUrl = m.img_url || 'https://via.placeholder.com/300x160?text=No+Image';
-        const card = document.createElement('div');
-        card.className = 'mission-card';
-        card.onclick = () => openViewModal(m.id);
-        card.innerHTML = `
-          <img src="${imgUrl}" class="card-img-area">
-          <div class="card-content">
-            <div class="mission-title">${m.title}</div>
-            <div class="mission-desc">${m.short_desc || ''}</div>
-            <div class="coin-badge"><div class="coin-icon">C</div> ${m.coins_reward}</div>
-          </div>`;
-        container.appendChild(card);
-      });
-      updatePaginationUI(missions.length);
-      } catch(e){
+        missions.forEach(m => {
+          const imgUrl = m.img_url || 'https://via.placeholder.com/300x160?text=No+Image';
+          const card = document.createElement('div');
+          card.className = 'mission-card';
+          card.onclick = () => openViewModal(m.id);
+
+          const statusText = m.hasSubmitted ? '제출됨!' : '미제출';
+          const statusClass = m.hasSubmitted ? 'submitted' : 'not-submitted';
+
+          card.innerHTML = `
+            <div class="card-img-wrapper">
+              <img src="${imgUrl}" class="card-img-area">
+              <div class="mission-status-badge ${statusClass}">
+                ${statusText}
+              </div>
+            </div>
+            <div class="card-content">
+              <div class="mission-title">${m.title}</div>
+              <div class="mission-desc">${m.short_desc || ''}</div>
+              <div class="coin-badge">
+                <div class="coin-icon">C</div> ${m.coins_reward}
+              </div>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+
+        updatePaginationUI(missions.length);
+      } catch (e) {
         console.error(e);
       }
     }
-      // 페이지 변경 함수
+
     function changePage(delta) {
       const newPage = currentPage + delta;
       if (newPage < 1) return;
@@ -430,139 +485,197 @@
     }
 
     function updatePaginationUI(itemCount) {
-      document.getElementById('pageIndicator').innerText = `${currentPage}`;
-      
-      // 1페이지면 이전 버튼 비활성화
+      document.getElementById('pageIndicator').innerText = `${currentPage} 페이지`;
       document.getElementById('prevBtn').disabled = (currentPage === 1);
-
-      // (꽉 채워서 9개가 왔을 때만 다음 버튼 활성화)
-      if (itemCount < 9) {
-        document.getElementById('nextBtn').disabled = true;
-      } else {
-        document.getElementById('nextBtn').disabled = false;
-      }
+      document.getElementById('nextBtn').disabled = itemCount < 9;
     }
-    // 상세 모달 열기
+
     async function openViewModal(id) {
-      currentMissionId = id;
-      const res = await fetch(`/api/missions/${id}`);
-      const m = await res.json();
+      try {
+        currentMissionId = id;
+        const res = await fetch(`/api/missions/${id}`);
+        const m = await res.json();
 
-      document.getElementById('viewTitle').innerText = m.title;
-      document.getElementById('viewDesc').innerText = m.detail_desc;
-      document.getElementById('viewCoin').innerText = m.coins_reward;
-      const img = document.getElementById('viewImg');
-      img.src = m.img_url || '';
-      img.style.display = m.img_url ? 'block' : 'none';
+        document.getElementById('viewTitle').innerText = m.title;
+        document.getElementById('viewDesc').innerText = m.detail_desc || '';
+        document.getElementById('viewCoin').innerText = m.coins_reward || 0;
 
-      // 권한별 UI 분기
-      if (currentUser && currentUser.role === 'knight') {
-        document.getElementById('userSubmitArea').classList.add('hidden');
-        document.getElementById('knightAdminArea').classList.remove('hidden');
-      } else {
-        document.getElementById('userSubmitArea').classList.remove('hidden');
-        document.getElementById('knightAdminArea').classList.add('hidden');
-        document.getElementById('submitMissionId').value = id;
+        const img = document.getElementById('viewImg');
+        img.src = m.img_url || '';
+        img.style.display = m.img_url ? 'block' : 'none';
+
+        const userSubmitArea = document.getElementById('userSubmitArea');
+        const knightAdminArea = document.getElementById('knightAdminArea');
+        const submitBtn = document.getElementById('submitButton');
+        const statusText = document.getElementById('submitStatusText');
+
+        if (currentUser && currentUser.role === 'knight') {
+          userSubmitArea.classList.add('hidden');
+          knightAdminArea.classList.remove('hidden');
+          if (statusText) {
+            statusText.textContent = '';
+            statusText.style.display = 'none';
+          }
+        } else {
+          userSubmitArea.classList.remove('hidden');
+          knightAdminArea.classList.add('hidden');
+          document.getElementById('submitMissionId').value = id;
+
+          if (submitBtn && statusText) {
+            if (m.hasSubmitted) {
+              submitBtn.textContent = '재제출하기';
+
+              let label = '이미 제출한 미션입니다. 재제출 가능합니다.';
+              if (m.lastStatus === 'pending') {
+                label = '이미 제출한 미션입니다. (현재 상태: 심사 대기 중) 재제출 가능합니다.';
+              } else if (m.lastStatus === 'success') {
+                label = '최근 제출이 성공 처리되었습니다. 필요한 경우 재제출할 수 있습니다.';
+              } else if (m.lastStatus === 'fail') {
+                label = '최근 제출이 실패 처리되었습니다. 수정 후 재제출해 주세요.';
+              }
+
+              statusText.textContent = label;
+              statusText.style.display = 'block';
+            } else {
+              submitBtn.textContent = '제출하기';
+              statusText.textContent = '';
+              statusText.style.display = 'none';
+            }
+          }
+        }
+
+        document.getElementById('viewModal').style.display = 'flex';
+      } catch (e) {
+        console.error(e);
+        alert('미션 정보를 불러오는 중 오류가 발생했습니다.');
       }
-      
-      document.getElementById('viewModal').style.display = 'flex';
     }
 
-    // 과제 제출
     document.getElementById('submitForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const formData = new FormData(e.target);
       const mid = document.getElementById('submitMissionId').value;
 
-      const res = await fetch(`/api/missions/${mid}/submit`, {
-        method: 'POST',
-        body: formData
-      });
-      const data = await res.json();
-      alert(data.message || data.error);
-      if(res.ok) closeModal('viewModal');
+      try {
+        const res = await fetch(`/api/missions/${mid}/submit`, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          alert(data.message || '제출 완료되었습니다.');
+          closeModal('viewModal');
+          loadMissions(currentPage);
+        } else {
+          alert(data.error || '제출 중 오류가 발생했습니다.');
+        }
+      } catch (e2) {
+        console.error(e2);
+        alert('제출 중 오류가 발생했습니다.');
+      }
     });
 
-    // 채점 모달 열기
     async function openJudgeModal() {
       document.getElementById('submissionsList').innerHTML = '로딩 중...';
       document.getElementById('judgeModal').style.display = 'flex';
 
-      const res = await fetch(`/api/missions/${currentMissionId}/submissions`);
-      const list = await res.json();
-      const container = document.getElementById('submissionsList');
-      container.innerHTML = '';
+      try {
+        const res = await fetch(`/api/missions/${currentMissionId}/submissions`);
+        const list = await res.json();
+        const container = document.getElementById('submissionsList');
+        container.innerHTML = '';
 
-      if(list.length === 0) {
-        container.innerHTML = '<p>제출된 과제가 없습니다.</p>';
-        return;
-      }
-
-      list.forEach(sub => {
-        const div = document.createElement('div');
-        div.className = 'judge-item';
-        
-        // 파일 링크 처리
-        let fileHtml = sub.file_path 
-          ? `<a href="${sub.file_path}" target="_blank" style="color:#3498db;">📂 첨부파일 다운로드</a>` 
-          : '<span style="color:#999;">파일 없음</span>';
-
-        // 채점 버튼
-        let actionHtml = '';
-        if (sub.status === 'pending') { //pending 상태일 때만 보임
-          actionHtml = `
-            <div style="margin-top:8px; display:flex; gap:5px;">
-              <button onclick="judge(${sub.id}, 'success')" style="padding:5px 10px; background:#27ae60; color:white; border:none; border-radius:4px; cursor:pointer;">O 성공 (코인 지급)</button>
-              <button onclick="judge(${sub.id}, 'fail')" style="padding:5px 10px; background:#e74c3c; color:white; border:none; border-radius:4px; cursor:pointer;">X 실패</button>
-            </div>
-          `;
-        } else {
-          actionHtml = `<div style="margin-top:5px; font-size:13px; color:#555;">판정 완료: <b>${sub.status}</b></div>`;
+        if (list.length === 0) {
+          container.innerHTML = '<p>제출된 과제가 없습니다.</p>';
+          return;
         }
 
-        div.innerHTML = `
-          <div><b>닉네임:</b> ${sub.nickname} (${sub.email})</div>
-          <div><b>내용:</b> ${sub.submit_comment}</div>
-          <div style="margin:5px 0;">${fileHtml}</div>
-          <span class="judge-status status-${sub.status}">${sub.status}</span>
-          ${actionHtml}
-        `;
-        container.appendChild(div);
-      });
+        list.forEach(sub => {
+          const div = document.createElement('div');
+          div.className = 'judge-item';
+          
+          let fileHtml = sub.file_path 
+            ? `<a href="${sub.file_path}" target="_blank" style="color:#3498db;">📂 첨부파일 다운로드</a>` 
+            : '<span style="color:#999;">파일 없음</span>';
+
+          let actionHtml = '';
+          if (sub.status === 'pending') {
+            actionHtml = `
+              <div style="margin-top:8px; display:flex; gap:5px;">
+                <button onclick="judge(${sub.id}, 'success')" style="padding:5px 10px; background:#27ae60; color:white; border:none; border-radius:4px; cursor:pointer;">O 성공 (코인 지급)</button>
+                <button onclick="judge(${sub.id}, 'fail')" style="padding:5px 10px; background:#e74c3c; color:white; border:none; border-radius:4px; cursor:pointer;">X 실패</button>
+              </div>
+            `;
+          } else {
+            actionHtml = `<div style="margin-top:5px; font-size:13px; color:#555;">판정 완료: <b>${sub.status}</b></div>`;
+          }
+
+          div.innerHTML = `
+            <div><b>닉네임:</b> ${sub.nickname} (${sub.email})</div>
+            <div><b>내용:</b> ${sub.submit_comment}</div>
+            <div style="margin:5px 0;">${fileHtml}</div>
+            <span class="judge-status status-${sub.status}">${sub.status}</span>
+            ${actionHtml}
+          `;
+          container.appendChild(div);
+        });
+      } catch (e) {
+        console.error(e);
+        alert('제출 목록을 불러오는 중 오류가 발생했습니다.');
+      }
     }
 
-    // 채점 실행
     async function judge(subId, result) {
-      if(!confirm(result === 'success' ? '성공 처리하시겠습니까? 코인이 지급됩니다.' : '실패 처리하시겠습니까?')) return;
+      if (!confirm(result === 'success'
+          ? '성공 처리하시겠습니까? 코인이 지급됩니다.'
+          : '실패 처리하시겠습니까?')) return;
 
-      const res = await fetch('/api/missions/submissions/judge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ submissionId: subId, result, missionId: currentMissionId })
-      });
-      
-      if(res.ok) {
-        alert('처리되었습니다.');
-        openJudgeModal();
-      } else {
+      try {
+        const res = await fetch('/api/missions/submissions/judge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ submissionId: subId, result, missionId: currentMissionId })
+        });
+        
+        if (res.ok) {
+          alert('처리되었습니다.');
+          openJudgeModal();
+        } else {
+          alert('오류 발생');
+        }
+      } catch (e) {
+        console.error(e);
         alert('오류 발생');
       }
     }
 
-    // 미션 추가
     document.getElementById('addMissionForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const formData = new FormData(e.target);
-      const res = await fetch('/api/missions', { method: 'POST', body: formData });
-      if (res.ok) {
-        alert('미션 생성 완료!');
-        closeModal('addModal');
-        loadMissions();
+      try {
+        const res = await fetch('/api/missions', { method: 'POST', body: formData });
+        if (res.ok) {
+          alert('미션 생성 완료!');
+          closeModal('addModal');
+          loadMissions(currentPage);
+        } else {
+          const data = await res.json();
+          alert(data.error || '미션 생성 중 오류가 발생했습니다.');
+        }
+      } catch (e2) {
+        console.error(e2);
+        alert('미션 생성 중 오류가 발생했습니다.');
       }
     });
 
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-    function openAddModal() { document.getElementById('addModal').style.display = 'flex'; }
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    function openAddModal() {
+      document.getElementById('addModal').style.display = 'flex';
+    }
   </script>
 </body>
 </html>

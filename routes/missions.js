@@ -10,7 +10,7 @@ const router = express.Router();
 
 // 관리자 권한 체크
 function requireAdmin(req, res, next) {
-  if (!req.session.userId) {
+  if (!req.session || !req.session.userId) {
     return res.status(401).json({ error: '로그인이 필요합니다.' });
   }
   
@@ -50,24 +50,91 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 } 
 });
 
-
+// 미션 목록 조회 (유저별 제출 여부/상태 포함)
 router.get('/', (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 9;
   const offset = (page - 1) * limit;
-  const sql = `SELECT * FROM missions ORDER BY id DESC LIMIT ? OFFSET ?`;
-  db.all(sql, [limit, offset], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
-  });
+  const userId = req.session?.userId || null;
+
+  // 로그인 안 한 경우: 기본 미션 목록 + 제출정보 기본값
+  if (!userId) {
+    const sql = `SELECT * FROM missions ORDER BY id DESC LIMIT ? OFFSET ?`;
+    db.all(sql, [limit, offset], (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      const enriched = rows.map(m => ({
+        ...m,
+        hasSubmitted: 0,
+        lastStatus: null,
+      }));
+      res.json(enriched);
+    });
+  } else {
+    // 로그인 한 경우: 이 유저의 최근 제출 상태까지 포함
+    const sql = `
+      SELECT 
+        m.*,
+        CASE WHEN s.id IS NULL THEN 0 ELSE 1 END AS hasSubmitted,
+        s.status AS lastStatus
+      FROM missions m
+      LEFT JOIN submissions s
+        ON s.id = (
+          SELECT id
+          FROM submissions
+          WHERE mission_id = m.id
+            AND user_id = ?
+          ORDER BY created_at DESC
+          LIMIT 1
+        )
+      ORDER BY m.id DESC
+      LIMIT ? OFFSET ?
+    `;
+    db.all(sql, [userId, limit, offset], (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(rows);
+    });
+  }
 });
 
+// 미션 상세 조회 (유저별 제출 여부/상태 포함)
 router.get('/:id', (req, res) => {
-  db.get('SELECT * FROM missions WHERE id = ?', [req.params.id], (err, row) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (!row) return res.status(404).json({ error: 'Mission not found' });
-    res.json(row);
-  });
+  const missionId = req.params.id;
+  const userId = req.session?.userId || null;
+
+  if (!userId) {
+    db.get('SELECT * FROM missions WHERE id = ?', [missionId], (err, row) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (!row) return res.status(404).json({ error: 'Mission not found' });
+      res.json({
+        ...row,
+        hasSubmitted: 0,
+        lastStatus: null,
+      });
+    });
+  } else {
+    const sql = `
+      SELECT 
+        m.*,
+        CASE WHEN s.id IS NULL THEN 0 ELSE 1 END AS hasSubmitted,
+        s.status AS lastStatus
+      FROM missions m
+      LEFT JOIN submissions s
+        ON s.id = (
+          SELECT id
+          FROM submissions
+          WHERE mission_id = m.id
+            AND user_id = ?
+          ORDER BY created_at DESC
+          LIMIT 1
+        )
+      WHERE m.id = ?
+    `;
+    db.get(sql, [userId, missionId], (err, row) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (!row) return res.status(404).json({ error: 'Mission not found' });
+      res.json(row);
+    });
+  }
 });
 
 // 미션 생성
@@ -91,7 +158,6 @@ router.post('/', upload.single('missionImage'), (req, res) => {
 // 과제 제출 기능
 // upload.single() 앞에 submitLimiter를 넣어서, 파일 업로드 전에 횟수부터 검사함!
 router.post('/:id/submit', submitLimiter, (req, res) => {
-  
   // Multer 에러 핸들링을 위해 래핑 함수 사용
   // (파일 크기가 5MB 넘으면 여기서 에러가 잡힘)
   const uploadMiddleware = upload.single('file');
@@ -105,7 +171,9 @@ router.post('/:id/submit', submitLimiter, (req, res) => {
     }
 
     // 2. 로그인 체크
-    if (!req.session.userId) return res.status(401).json({ error: '로그인 필요' });
+    if (!req.session || !req.session.userId) {
+      return res.status(401).json({ error: '로그인 필요' });
+    }
 
     const missionId = req.params.id;
     const userId = req.session.userId;
@@ -117,7 +185,13 @@ router.post('/:id/submit', submitLimiter, (req, res) => {
       [missionId, userId, filePath, comment],
       function(dbErr) {
         if (dbErr) return res.status(500).json({ error: dbErr.message });
-        res.json({ status: 'ok', message: '제출되었습니다. 기사님의 평가를 기다리세요.' });
+        // 프론트에서 버튼/상태를 바꾸기 쉽도록 정보 같이 전달
+        res.json({ 
+          status: 'ok', 
+          message: '제출되었습니다. 기사님의 평가를 기다리세요.',
+          hasSubmitted: true,
+          submissionStatus: 'pending'
+        });
       }
     );
   });
@@ -152,15 +226,27 @@ router.post('/submissions/judge', async (req, res) => {
 
   try {
     await new Promise((resolve, reject) => {
-      db.run(`UPDATE submissions SET status = ? WHERE id = ?`, [result, submissionId], (err) => (err ? reject(err) : resolve()));
+      db.run(
+        `UPDATE submissions SET status = ? WHERE id = ?`,
+        [result, submissionId],
+        (err) => (err ? reject(err) : resolve())
+      );
     });
 
     if (result === 'success') {
       const mission = await new Promise((resolve, reject) => {
-        db.get('SELECT coins_reward FROM missions WHERE id = ?', [missionId], (err, row) => err ? reject(err) : resolve(row));
+        db.get(
+          'SELECT coins_reward FROM missions WHERE id = ?',
+          [missionId],
+          (err, row) => err ? reject(err) : resolve(row)
+        );
       });
       const submission = await new Promise((resolve, reject) => {
-        db.get('SELECT user_id FROM submissions WHERE id = ?', [submissionId], (err, row) => err ? reject(err) : resolve(row));
+        db.get(
+          'SELECT user_id FROM submissions WHERE id = ?',
+          [submissionId],
+          (err, row) => err ? reject(err) : resolve(row)
+        );
       });
       await userRepo.addCoin(submission.user_id, mission.coins_reward);
     }
