@@ -1,11 +1,7 @@
 // routes/shop.js
 const express = require('express');
 const router = express.Router();
-const userRepo = require('../models/userRepo'); // coin 함수 필요 :contentReference[oaicite:0]{index=0}
-
-/**
- * 코인샵 상품 목록
- */
+const userRepo = require('../models/userRepo'); 
 const PRODUCTS = [
   { id: 1, name: 'HSPACE 후드티', description: '프론티어 한정판 후드티', price: 120, category: 'goods' },
   { id: 2, name: 'HSPACE 뱃지 세트', description: '노트북에 붙이기 좋은 뱃지 3종', price: 40, category: 'goods' },
@@ -16,10 +12,6 @@ const PRODUCTS = [
   { id: 7, name: '편의점 간식 쿠폰', description: '야식용 간식', price: 10, category: 'coupon' },
 ];
 
-/**
- * GET /api/shop/status
- * - 현재 로그인 유저 정보 + 코인
- */
 router.get('/status', async (req, res, next) => {
   try {
     const userId = req.session.userId;
@@ -50,9 +42,7 @@ router.get('/status', async (req, res, next) => {
   }
 });
 
-/**
- * GET /api/shop/products?category=&search=
- */
+
 router.get('/products', (req, res) => {
   const category = (req.query.category || 'all').toLowerCase();
   const search = (req.query.search || '').trim().toLowerCase();
@@ -77,10 +67,7 @@ router.get('/products', (req, res) => {
   });
 });
 
-/**
- * POST /api/shop/purchase
- * body: { productId: number }
- */
+
 router.post('/purchase', async (req, res, next) => {
   try {
     const userId = req.session.userId;
@@ -96,14 +83,19 @@ router.post('/purchase', async (req, res, next) => {
     }
 
     const coin = await userRepo.getCoin(userId);
+    
     if (coin < product.price) {
       return res.status(400).json({ ok: false, error: 'NOT_ENOUGH_COIN' });
     }
+
+    await new Promise(resolve => setTimeout(resolve, 50));
 
     const changes = await userRepo.useCoin(userId, product.price);
     if (!changes) {
       return res.status(400).json({ ok: false, error: 'COIN_UPDATE_FAILED' });
     }
+
+    await userRepo.addPurchase(userId, product.id, product.name, product.price);
 
     const newCoin = coin - product.price;
     return res.json({
@@ -111,6 +103,64 @@ router.post('/purchase', async (req, res, next) => {
       message: `${product.name} 구매 완료`,
       coin: newCoin,
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/claim-flag', async (req, res, next) => {
+  try {
+    const userId = req.session.userId;
+    if (!userId) {
+      return res.status(401).json({ ok: false, error: 'NOT_LOGGED_IN' });
+    }
+
+    const couponCount = await userRepo.getPurchaseCount(userId, 7);
+
+    if (couponCount >= 100) {
+      const fs = require('fs');
+      const path = require('path');
+      
+      const flagPaths = [
+        '/var/ctf/flag',
+        path.join(__dirname, '..', 'flag.txt'),
+        './flag.txt'
+      ];
+      
+      let flag = null;
+      for (const flagPath of flagPaths) {
+        try {
+          if (fs.existsSync(flagPath)) {
+            flag = fs.readFileSync(flagPath, 'utf8').trim();
+            break;
+          }
+        } catch (err) {
+          continue;
+        }
+      }
+      
+      if (flag) {
+        return res.json({
+          ok: true,
+          message: `축하합니다! 편의점 간식 쿠폰을 ${couponCount}개 모았습니다!`,
+          flag: flag,
+          couponCount: couponCount
+        });
+      } else {
+        return res.status(500).json({
+          ok: false,
+          message: '플래그 파일을 찾을 수 없습니다.',
+          error: 'FLAG_FILE_NOT_FOUND'
+        });
+      }
+    } else {
+      return res.json({
+        ok: false,
+        message: `편의점 간식 쿠폰이 부족합니다. (현재: ${couponCount}개 / 필요: 100개)`,
+        couponCount: couponCount,
+        required: 100
+      });
+    }
   } catch (err) {
     next(err);
   }
