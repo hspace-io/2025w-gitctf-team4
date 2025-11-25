@@ -1,15 +1,20 @@
-FROM node:22
+FROM node:18-alpine
 
 WORKDIR /app
 
 COPY package*.json ./
-
-RUN npm install --omit=dev
+RUN npm install --production
 
 COPY . .
 
 RUN mkdir -p /var/ctf
-RUN cp ./flag /var/ctf/flag
+
+COPY flag.txt /var/ctf/flag.txt
+
+RUN chmod 444 /var/ctf/flag.txt
+
+RUN mkdir -p /app/data
 
 EXPOSE 5000
-CMD ["npm", "start"]
+
+CMD ["node", "server.js"]
