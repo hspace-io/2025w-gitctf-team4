@@ -2,10 +2,6 @@
 const db = require('../db');
 const bcrypt = require('bcrypt');
 
-/**
- * email로 유저 한 명 찾기
- *  - SELECT * FROM users WHERE email = ?
- */
 function findByEmail(email) {
   return new Promise((resolve, reject) => {
     db.get(
@@ -28,37 +24,34 @@ function findById(userId) {
         if (err) {
           return reject(err);
         }
-        resolve(row); // 사용자가 없으면 undefined 반환
+        resolve(row); 
       }
     );
   });
 }
 
-/**
- * 새 유저 생성 (회원가입)
- *  - { email, passwordHash, nickname, coin(기본값 0) }
- */
+
 function createUser({ email, passwordHash, nickname, role = 'user' }) {
   return new Promise((resolve, reject) => {
     const sql =
-      'INSERT INTO users (email, password_hash, nickname, role, coin) VALUES (?, ?, ?, ?, 0)';
-    db.run(sql, [email, passwordHash, nickname], function (err) {
+      'INSERT INTO users (email, password_hash, nickname, role, coin) VALUES (?, ?, ?, ?, 100)';
+    db.run(sql, [email, passwordHash, nickname, role], function (err) {
       if (err) {
         return reject(err);
       }
-      // this.lastID = 방금 INSERT된 row의 id
+
       resolve({
         id: this.lastID,
         email,
         nickname,
         role,
-        coin: 0
+        coin: 100
       });
     });
   });
 }
 
-// 회원정보 수정 시 업데이트 db에 반영
+
 function updateUser(userId, { nickname, email, passwordHash }) {
   return new Promise((resolve, reject) => {
     db.run(
@@ -68,22 +61,18 @@ function updateUser(userId, { nickname, email, passwordHash }) {
         if (err) {
           return reject(err);
         }
-        resolve(this.changes); // 영향받은 행 수 반환
+        resolve(this.changes); 
       }
     );
   });
 }
 
-/**
- * 비밀번호 검증
- *  - DB row 에서 password_hash 꺼내서 bcrypt.compare
- */
 async function verifyPassword(user, plainPassword) {
   if (!user || !user.password_hash) return false;
   return bcrypt.compare(plainPassword, user.password_hash);
 }
 
-// 코인 조회
+
 function getCoin(userId) {
   return new Promise((resolve, reject) => {
     db.get(
@@ -97,9 +86,7 @@ function getCoin(userId) {
   });
 }
 
-/**
- * 코인 추가 (미션 완료 시 등)
- */
+
 function addCoin(userId, amount) {
   return new Promise((resolve, reject) => {
     db.run(
@@ -113,17 +100,57 @@ function addCoin(userId, amount) {
   });
 }
 
-/**
- * 코인 차감 (상점 구매 시)
- */
+
 function useCoin(userId, amount) {
   return new Promise((resolve, reject) => {
     db.run(
-      'UPDATE users SET coin = coin - ? WHERE id = ? AND coin >= ?',
-      [amount, userId, amount],
+      'UPDATE users SET coin = coin - ? WHERE id = ?',
+      [amount, userId],
       function (err) {
         if (err) return reject(err);
-        resolve(this.changes); // 성공시 1, 실패(코인부족)시 0
+        resolve(this.changes); 
+      }
+    );
+  });
+}
+
+
+function addPurchase(userId, productId, productName, price) {
+  return new Promise((resolve, reject) => {
+    db.run(
+      'INSERT INTO purchases (user_id, product_id, product_name, price) VALUES (?, ?, ?, ?)',
+      [userId, productId, productName, price],
+      function (err) {
+        if (err) return reject(err);
+        resolve(this.lastID);
+      }
+    );
+  });
+}
+
+
+function getPurchaseCount(userId, productId) {
+  return new Promise((resolve, reject) => {
+    db.get(
+      'SELECT COUNT(*) as count FROM purchases WHERE user_id = ? AND product_id = ?',
+      [userId, productId],
+      (err, row) => {
+        if (err) return reject(err);
+        resolve(row ? row.count : 0);
+      }
+    );
+  });
+}
+
+
+function getAllPurchases(userId) {
+  return new Promise((resolve, reject) => {
+    db.all(
+      'SELECT * FROM purchases WHERE user_id = ? ORDER BY purchased_at DESC',
+      [userId],
+      (err, rows) => {
+        if (err) return reject(err);
+        resolve(rows || []);
       }
     );
   });
@@ -139,4 +166,7 @@ module.exports = {
   getCoin,
   addCoin,
   useCoin,
+  addPurchase,
+  getPurchaseCount,
+  getAllPurchases,
 };
