@@ -1,22 +1,19 @@
-FROM node:18
+FROM node:22
 
 WORKDIR /app
 
-# PHP 설치
-RUN apt-get update && apt-get install -y php-cli && rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends php-cli \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY package*.json ./
-
-RUN npm install
+RUN npm install --omit=dev
 
 COPY . .
 
-# 플래그 파일 설정
-RUN mkdir -p /var/ctf && \
-    cp /app/flag.txt /var/ctf/flag && \
-    chmod 444 /var/ctf/flag && \
-    rm /app/flag.txt
+RUN mkdir -p /var/ctf \
+    && cp flag.txt /var/ctf/flag.txt
 
 EXPOSE 5000
 
-CMD ["node", "server.js"]
+CMD ["npm", "start"]
