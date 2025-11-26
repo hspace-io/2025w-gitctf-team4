@@ -6,7 +6,7 @@ const bcrypt = require('bcrypt');
 const DB_PATH = path.join(__dirname, 'data', 'knights.db');
 
 //const FLAG_PATH = process.env.FLAG_PATH || path.join(__dirname, 'flag.txt'); //local test
-const FLAG_PATH = "/var/ctf/flag" #docker
+const FLAG_PATH = "/var/ctf/flag"
 
 const db = new sqlite3.Database(DB_PATH);
 
