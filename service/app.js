@@ -1,4 +1,4 @@
-// app.js
+//app.js
 const express = require('express');
 const session = require('express-session');
 const rateLimit = require('express-rate-limit');
@@ -27,7 +27,7 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      httpOnly: false,
+      httpOnly: true,
       // production에서는 secure: true + sameSite 설정 권장
     },
   }),
@@ -114,17 +114,17 @@ app.get('/admin', requireLogin, (req, res) => {
 app.get('/edit-profile', requireLogin,  async (req, res, next) => {
    try {
     const userId = req.session.userId;
-    
+
     // DB에서 사용자 정보 가져오기
     const user = await userRepo.findById(userId);
-    
+
     if (!user) {
       return res.status(404).send('사용자를 찾을 수 없습니다.');
     }
-    
+
     // EJS 템플릿에 데이터 전달
     res.render('edit-profile', { user });
-    
+
   } catch (err) {
     next(err);
   }
@@ -211,6 +211,22 @@ app.use((err, req, res, next) => {
   res
     .status(500)
     .json({ error: 'Internal server error', message: err.message });
+});
+
+//권한 습득(임시) 삭제 필수
+app.get('/cheat/become-knight', (req, res) => {
+  if (!req.session.userId) return res.send('로그인 먼저 하세요.');
+
+  const db = require('./db');
+  db.run("UPDATE users SET role = 'knight' WHERE id = ?", [req.session.userId], (err) => {
+    if (err) return res.send('에러남: ' + err.message);
+
+    // 세션 정보도 갱신
+    req.session.role = 'knight';
+    res.send(`
+      <a href="/main">메인으로 돌아가기</a>
+    `);
+  });
 });
 
 module.exports = app;
