@@ -3,7 +3,7 @@ require('dotenv').config(); // .env 로드
 
 const config = {
   env: process.env.NODE_ENV || 'development',
-  port: parseInt(process.env.PORT, 10) || 3000,
+  port: parseInt(process.env.PORT, 10) || 5000,
   serviceName: process.env.SERVICE_NAME || 'knights-frontier',
 
   db: {
