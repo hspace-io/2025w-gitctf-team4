@@ -9,7 +9,7 @@ COPY . .
 
 RUN mkdir -p /var/ctf
 
-COPY flag.txt /var/ctf/flag
+COPY flag /var/ctf/flag
 
 RUN chmod 444 /var/ctf/flag
 
