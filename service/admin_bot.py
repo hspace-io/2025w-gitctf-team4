@@ -201,7 +201,7 @@ def main():
     with open(FLAG_PATH, 'r', encoding='utf-8') as f:
         flag = f.read().strip()
 
-    BASE_URL = 'http://localhost:3000'
+    BASE_URL = 'http://localhost:5000'
     ADMIN_EMAIL = 'flag@flag.com'
     ADMIN_PASSWORD = flag
     VISIT_INTERVAL = 10
