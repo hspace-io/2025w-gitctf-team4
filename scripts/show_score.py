@@ -26,7 +26,6 @@ import sys
 import csv
 import json
 import time
-import requests
 from utils import load_config, iso8601_to_timestamp, is_timeover
 from github import Github, decode_content, get_github_path
 from io import StringIO
@@ -57,18 +56,7 @@ def display_score(data, freq, unintended_pts, end_time, pin_time = None):
     history = set()
     num_solver = {}
     unint_attack_hist = {}
-    first_line = True
     for row in reader:
-        # Skip empty rows or rows with insufficient columns
-        if not row or len(row) < 6:
-            continue
-        # Skip header row (check if first column is not numeric)
-        if first_line:
-            first_line = False
-            try:
-                float(row[0])
-            except (ValueError, IndexError):
-                continue  # Skip header row
         attacker, defender, branch, kind, points = row[1], row[2], row[3], \
                 row[4], int(row[5])
         attack_id = attacker + "_" + defender + "_" + branch
@@ -78,34 +66,17 @@ def display_score(data, freq, unintended_pts, end_time, pin_time = None):
             break
         if event_id in history: continue
         history.add(event_id)
-        # unintended bugs: if points == 0, it means defense (calculate unintended points)
-        # if points > 0 and kind == 'unintended', it's already scored, just add it
-        if kind == 'unintended':
-            if points == 0:
-                # Defense: calculate unintended points from when attack started
-                if attack_id in unint_attack_hist:
-                    s = unint_attack_hist[attack_id]
-                    pts = compute_unintended(s, t, freq, unintended_pts)
-                    compute_score(score, attacker, pts)
-                    unint_attack_hist.pop(attack_id, None)
-            else:
-                # Unintended bug already scored in CSV, just add the points
-                compute_score(score, attacker, points)
-        elif kind == 'intended':
-            # Intended bug: add points immediately
-            compute_score(score, attacker, points)
-            # Don't add to unint_attack_hist if already scored in CSV
-            # unint_attack_hist is only for tracking attacks that may become unintended
-            # but if it's already in CSV, it's been processed
-            # Note: update_deferred is for cases where an intended attack hasn't been defended yet
-            # but we're showing the current score. Since CSV already has the final state,
-            # we don't need to add to unint_attack_hist here.
-    
-    # Only update deferred points for attacks that are still ongoing (not in CSV)
-    # Since CSV represents the final state, we typically don't need this,
-    # but keeping it for cases where the scoreboard is viewed during an active CTF
-    # Commented out to avoid double counting when CSV already has all data:
-    # update_deferred(score, unint_attack_hist, freq, unintended_pts, end_time)
+        # unintended bugs
+        if attack_id in unint_attack_hist and points == 0:
+            if points != 0: continue
+            s = unint_attack_hist[attack_id]
+            pts = compute_unintended(s, t, freq, unintended_pts)
+            compute_score(score, attacker, pts)
+            unint_attack_hist.pop(attack_id, None)
+        else:
+            unint_attack_hist[attack_id] = t
+    # We now update all the deferred points for unintended attacks
+    update_deferred(score, unint_attack_hist, freq, unintended_pts, end_time)
 
     if pin_time is None:
         # Print out
@@ -153,38 +124,15 @@ def show_score(token, config_file):
     end_time = config['end_time']
     start_time = config['start_time']
     path = get_github_path(scoreboard_url)
-    
-    # Try to get score.csv without authentication first (for public repos)
-    try:
-        r = requests.get('https://api.github.com/repos/' + path + '/contents/score.csv')
-        if r.status_code == 200:
-            response = r.json()
-            csv_bytes = decode_content(response)
-            csv = csv_bytes.decode('utf-8') if isinstance(csv_bytes, bytes) else csv_bytes
-        else:
-            # If public access fails, try with authentication
-            g = Github(config['player'], token)
-            if g.get('/repos/' + path) is None:
-                print('[*] Failed to access the repository %s' % path)
-                sys.exit()
-            r = g.get('/repos/' + path + '/contents/' + 'score.csv')
-            if r is None:
-                print('[*] Failed to get the score file.')
-                sys.exit()
-            csv_bytes = decode_content(r)
-            csv = csv_bytes.decode('utf-8') if isinstance(csv_bytes, bytes) else csv_bytes
-    except Exception as e:
-        # Fallback to authenticated access
-        g = Github(config['player'], token)
-        if g.get('/repos/' + path) is None:
-            print('[*] Failed to access the repository %s' % path)
-            sys.exit()
-        r = g.get('/repos/' + path + '/contents/' + 'score.csv')
-        if r is None:
-            print('[*] Failed to get the score file.')
-            sys.exit()
-        csv_bytes = decode_content(r)
-        csv = csv_bytes.decode('utf-8') if isinstance(csv_bytes, bytes) else csv_bytes
+    g = Github(config['player'], token)
+    if g.get('/repos/' + path) is None:
+        print('[*] Failed to access the repository %s' % path)
+        sys.exit()
+    r = g.get('/repos/' + path + '/contents/' + 'score.csv')
+    if r is None:
+        print('[*] Failed to get the score file.')
+        sys.exit()
+    csv = decode_content(r)
     display_score(csv, freq, unintended_pts, end_time)
 
     hour_from_start = 0
