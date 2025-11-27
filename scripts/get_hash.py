@@ -42,13 +42,7 @@ def start_get_hash(config, github, config_file):
         print('[*] Get the commit hash of %s repo.' % repo_name)
         clone(repo_owner, repo_name)
         branches = list_branches(repo_name)
-        
-        # Remove main/master branch (not a bug branch)
-        if "master" in branches:
-            branches.remove("master")
-        elif "main" in branches:
-            branches.remove("main")
-        
+        branches.remove("master") # Do not consider master branch
         for branch in branches:
             checkout(repo_name, branch)
             hash = get_latest_commit_hash(repo_name, int(time.time()), branch)
