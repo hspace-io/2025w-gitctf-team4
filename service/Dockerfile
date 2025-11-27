@@ -9,9 +9,9 @@ COPY . .
 
 RUN mkdir -p /var/ctf
 
-COPY flag.txt /var/ctf/flag.txt
+COPY flag.txt /var/ctf/flag
 
-RUN chmod 444 /var/ctf/flag.txt
+RUN chmod 444 /var/ctf/flag
 
 RUN mkdir -p /app/data
 
