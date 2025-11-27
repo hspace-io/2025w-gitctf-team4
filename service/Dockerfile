@@ -12,7 +12,7 @@ RUN npm install --omit=dev
 COPY . .
 
 RUN mkdir -p /var/ctf \
-    && cp flag.txt /var/ctf/flag.txt
+    && cp flag /var/ctf/flag
 
 EXPOSE 5000
 
